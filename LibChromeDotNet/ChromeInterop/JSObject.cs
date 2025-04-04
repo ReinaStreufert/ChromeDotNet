@@ -9,10 +9,10 @@ namespace LibChromeDotNet.ChromeInterop
 {
     public class JSObject : IJSObject
     {
-        private InteropSession _Session;
+        private IInteropSession _Session;
         private RemoteObject _ObjectInfo;
 
-        public JSObject(InteropSession session, RemoteObject objectInfo)
+        public JSObject(IInteropSession session, RemoteObject objectInfo)
         {
             _Session = session;
             _ObjectInfo = objectInfo;

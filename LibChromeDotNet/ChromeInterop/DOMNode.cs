@@ -19,36 +19,51 @@ namespace LibChromeDotNet.ChromeInterop
             _NodeTree = tree;
         }
 
-        public string Name => throw new NotImplementedException();
+        public string Name => _NodeInfo.Name;
 
-        public Task DeleteNodeAsync()
+        public async Task DeleteNodeAsync()
         {
-            throw new NotImplementedException();
+            await _Session.RequestAsync(DOM.RemoveNode(_NodeInfo.Id));
         }
 
-        public Task<IEnumerable<KeyValuePair<string, string>>> GetAttributesAsync()
+        public async Task<IEnumerable<KeyValuePair<string, string>>> GetAttributesAsync()
         {
-            throw new NotImplementedException();
+            return await _Session.RequestAsync(DOM.GetAttributes(_NodeInfo.Id));
         }
 
-        public Task<IEnumerable<IDOMNode>> GetChildrenAsync()
+        public async Task<IEnumerable<IDOMNode>> GetChildrenAsync()
         {
-            throw new NotImplementedException();
+            if (_NodeTree.Depth == 0)
+                _NodeTree = await _Session.RequestAsync(DOM.GetNodeTree(_NodeInfo.Id, 2));
+            if (_NodeTree.Children == null)
+                return Enumerable.Empty<IDOMNode>();
+            return _NodeTree.Children
+                .Select(n => new DOMNode(_Session, n));
         }
 
-        public IJSObject GetJavascriptNodeAsync()
+        public async Task<IJSObject> GetJavascriptNodeAsync()
         {
-            throw new NotImplementedException();
+            var remoteObject = await _Session.RequestAsync(DOM.ResolveJavscriptNode(_NodeInfo.Id));
+            return new JSObject(_Session, remoteObject);
         }
 
-        public Task<IDOMNode> QuerySelectAsync(string selector)
+        public async Task<IDOMNode> QuerySelectAsync(string selector)
         {
-            throw new NotImplementedException();
+            var resultId = await _Session.RequestAsync(DOM.QuerySelector(_NodeInfo.Id, selector));
+            var resultTree = await _Session.RequestAsync(DOM.GetNodeTree(resultId, 2));
+            return new DOMNode(_Session, resultTree);
         }
 
-        public Task<IEnumerable<IDOMNode>> QuerySelectManyAsync(string selector)
+        public async Task<IDOMNode[]> QuerySelectManyAsync(string selector)
         {
-            throw new NotImplementedException();
+            var resultIds = await _Session.RequestAsync(DOM.QuerySelectorMany(_NodeInfo.Id, selector));
+            List<IDOMNode> results = new List<IDOMNode>();
+            foreach (var resultId in resultIds)
+            {
+                var nodeTree = await _Session.RequestAsync(DOM.GetNodeTree(resultId, 1));
+                results.Add(new DOMNode(_Session, nodeTree));
+            }
+            return results.ToArray();
         }
 
         public Task RemoveAttributeAsync(string attrName)
