@@ -1,0 +1,25 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.4.33110.190
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "LibChromeDotNet", "LibChromeDotNet\LibChromeDotNet.csproj", "{F867E887-B6E5-499D-BA68-A8C10082290B}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{F867E887-B6E5-499D-BA68-A8C10082290B}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{F867E887-B6E5-499D-BA68-A8C10082290B}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{F867E887-B6E5-499D-BA68-A8C10082290B}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{F867E887-B6E5-499D-BA68-A8C10082290B}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {F6FCA787-CEF2-4D83-BEC1-9927F3D3ED07}
+	EndGlobalSection
+EndGlobal
