@@ -4,16 +4,14 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace LibChromeDotNet.WebInterop
+namespace LibChromeDotNet.ChromeInterop
 {
-    public interface IJSObject : IJSEnvironment
+    public interface IJSObject : IJSContext
     {
         public JSType Type { get; }
         public Task<IEnumerable<IJSProperty>> GetPropertiesAsync();
         public Task<IEnumerable<string>> GetKeysAsync();
         public Task<IEnumerable<IJSObject>> GetValuesAsync();
-        public Task DefinePropertyAsync(string name, IJSObject? value = null, bool writable = true);
-        public Task DefinePropertyAsync(string name, IJSFunction? getter, IJSFunction? setter);
     }
 
     public interface IJSFunction : IJSObject

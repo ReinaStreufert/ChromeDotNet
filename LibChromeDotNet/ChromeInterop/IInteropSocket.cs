@@ -4,12 +4,13 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace LibChromeDotNet.WebInterop
+namespace LibChromeDotNet.ChromeInterop
 {
     public interface IInteropSocket : IDisposable
     {
         public Task CloseAsync();
         public Task<IEnumerable<IInteropTarget>> GetTargetsAsync();
+        public Task EnableTargetDiscoveryAsync(Action<IInteropTarget> tarqetCreated, Action<string> targetDestroyed);
         public Task<IInteropSession> OpenSessionAsync(IInteropTarget target, IEnumerable<IURIFetchHandler> handlers);
         public Task<IInteropSession> OpenSessionAsync(IInteropTarget target, params IURIFetchHandler[] handlers);
     }

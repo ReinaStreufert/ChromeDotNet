@@ -1,4 +1,4 @@
-﻿using LibChromeDotNet.WebInterop;
+﻿using LibChromeDotNet.ChromeInterop;
 using Newtonsoft.Json.Linq;
 using System;
 using System.Collections.Generic;
@@ -44,6 +44,18 @@ namespace LibChromeDotNet.CDP.Domains
             };
             return CDP.Request("Target.detachFromTarget");
         }
+
+        public static ICDPRequest SetDiscoverTargets(bool enabled)
+        {
+            var paramsJson = new JObject
+            {
+                { "discover", enabled }
+            };
+            return CDP.Request("Target.setDiscoverTargets", paramsJson);
+        }
+
+        public static ICDPEvent<TargetInfo> OnTargetCreated => CDP.Event("Target.targetCreated", resultJson => new TargetInfo((JObject)resultJson["targetInfo"]!));
+        public static ICDPEvent<string> OnTargetDestroyed => CDP.Event("Target.targetDestroyed", resultJson => resultJson["targetId"]!.ToString());
     }
 
     public struct TargetInfo : IInteropTarget

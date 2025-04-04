@@ -4,17 +4,17 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace LibChromeDotNet.WebInterop
+namespace LibChromeDotNet.ChromeInterop
 {
-    public interface IJSEnvironment
+    public interface IJSContext
     {
         public Task<IJSObject?> CallFunctionAsync(string name, params IJSObject[] arguments);
     }
 
-    public interface IJSExecutionContext : IJSEnvironment
+    public interface IJSExecutionContext : IJSContext
     {
         public string Name { get; }
-        public IJSObject Global { get; }
+        public Task<IJSObject> GetGlobalAsync();
         public Task<IJSObject?> EvaluateAsync(string scriptText);
         public Task ExposeFunctionAsync(string functionName, Action<string> bindingCallback);
     }

@@ -1,4 +1,4 @@
-﻿using LibChromeDotNet.WebInterop;
+﻿using LibChromeDotNet.ChromeInterop;
 using Newtonsoft.Json.Linq;
 using System;
 using System.Collections.Generic;
@@ -27,7 +27,7 @@ namespace LibChromeDotNet.CDP.Domains
                 { "objectId", objectId },
                 { "arguments", CreateArgumentsJson(arguments) }
             };
-            return CDP.Request("Runtime.callFunctionOn", jsonParams, resultJson => new RemoteObject(resultJson));
+            return RemoteObjectResult("Runtime.callFunctionOn", jsonParams);
         }
 
         public static ICDPRequest<RemoteObject> CallFunctionOn(int executionContextId, string functionName, params RemoteObject[] arguments)
@@ -38,8 +38,20 @@ namespace LibChromeDotNet.CDP.Domains
                 { "objectId", executionContextId },
                 { "arguments", CreateArgumentsJson(arguments) }
             };
-            return CDP.Request("Runtime.callFunctionOn", jsonParams, resultJson => new RemoteObject(resultJson));
+            return RemoteObjectResult("Runtime.callFunctionOn", jsonParams);
         }
+
+        public static ICDPRequest<RemoteObject> Evaluate(string expression, int executionContextId = -1)
+        {
+            var jsonParams = new JObject();
+            jsonParams.Add("expression", expression);
+            if (executionContextId > -1)
+                jsonParams.Add("contextId", executionContextId);
+            return RemoteObjectResult("Runtime.evaluate", jsonParams);
+        }
+
+        private static ICDPRequest<RemoteObject> RemoteObjectResult(string method, JObject jsonParams) =>
+            CDP.Request(method, jsonParams, resultJson => new RemoteObject((JObject)resultJson["result"]!));
 
         private static JArray CreateArgumentsJson(RemoteObject[] arguments)
         {

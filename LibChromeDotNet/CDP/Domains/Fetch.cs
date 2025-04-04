@@ -1,4 +1,4 @@
-﻿using LibChromeDotNet.WebInterop;
+﻿using LibChromeDotNet.ChromeInterop;
 using Newtonsoft.Json.Linq;
 using System;
 using System.Collections.Generic;

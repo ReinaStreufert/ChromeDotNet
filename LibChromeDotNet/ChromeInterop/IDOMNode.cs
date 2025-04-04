@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace LibChromeDotNet.WebInterop
+namespace LibChromeDotNet.ChromeInterop
 {
     public interface IDOMNode
     {
