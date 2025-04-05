@@ -11,7 +11,7 @@ namespace LibChromeDotNet.ChromeInterop
     {
         private IInteropSession _Session;
         private DOMNodeTree _NodeTree;
-        private DOMNodeInfo _NodeInfo => _NodeTree.Node;
+        private ref DOMNodeInfo _NodeInfo => ref _NodeTree.Node;
 
         public DOMNode(IInteropSession session, DOMNodeTree tree)
         {
@@ -66,19 +66,15 @@ namespace LibChromeDotNet.ChromeInterop
             return results.ToArray();
         }
 
-        public Task RemoveAttributeAsync(string attrName)
-        {
-            throw new NotImplementedException();
-        }
+        public async Task RemoveAttributeAsync(string attrName) =>
+            await _Session.RequestAsync(DOM.RemoveAttribute(_NodeInfo.Id, attrName));
+        public async Task SetAttributeAsync(string attrName, string newValue) =>
+            await _Session.RequestAsync(DOM.SetAttributeValue(_NodeInfo.Id, attrName, newValue));
 
-        public Task SetAttributeAsync(string attrName, string newValue)
+        public async Task SetValueAsync(string value)
         {
-            throw new NotImplementedException();
-        }
-
-        public Task SetValueAsync(string value)
-        {
-            throw new NotImplementedException();
+            await _Session.RequestAsync(DOM.SetNodeValue(_NodeInfo.Id, value));
+            _NodeInfo.Value = value;
         }
     }
 }

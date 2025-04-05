@@ -51,9 +51,15 @@ namespace LibChromeDotNet.ChromeInterop
             return new Frame(this, frameTree);
         }
 
-        public Task<IJSObject> RequireJSModuleAsync(IJSModule module)
+        public Task<IJSObject> RequireModuleAsync(IJSModule module)
         {
             return _LoadedModules.GetOrAdd(module.Key, o => LoadJSModuleAsync(module));
+        }
+
+        public async Task<IJSObject> EvaluateExpressionAsync(string jsExpression)
+        {
+            var remoteObject = await RequestAsync(Runtime.Evaluate(jsExpression));
+            return new JSObject(this, remoteObject);
         }
 
         private async Task<IJSObject> LoadJSModuleAsync(IJSModule module)

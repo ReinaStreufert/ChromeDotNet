@@ -15,7 +15,8 @@ namespace LibChromeDotNet.ChromeInterop
         public Task ClosePageAsync();
         public Task<IFrame> GetFrameTreeAsync();
         public Task<IDOMNode> GetDOMDocumentAsync();
-        public Task<IJSObject> RequireJSModuleAsync(IJSModule module);
+        public Task<IJSObject> RequireModuleAsync(IJSModule module);
+        public Task<IJSObject> EvaluateExpressionAsync(string jsExpression);
         public Task RequestAsync(ICDPRequest request);
         public Task<TResult> RequestAsync<TResult>(ICDPRequest<TResult> request);
         public void SubscribeEvent<TParams>(ICDPEvent<TParams> targetEvent, Action<TParams> handlerCallback);

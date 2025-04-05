@@ -6,18 +6,18 @@ using System.Threading.Tasks;
 
 namespace LibChromeDotNet.ChromeInterop
 {
-    public interface IJSObject : IJSContext
+    public interface IJSObject
     {
         public JSType Type { get; }
         public Task<IEnumerable<IJSProperty>> GetPropertiesAsync();
         public Task<IEnumerable<string>> GetKeysAsync();
         public Task<IEnumerable<IJSObject>> GetValuesAsync();
+        public Task<IJSObject?> CallFunctionAsync(string name, params IJSObject[] arguments);
     }
 
     public interface IJSFunction : IJSObject
     {
         public Task<IJSObject?> CallAsync(params IJSObject[] arguments);
-        public Task<IJSObject?> CallAsync(IJSExecutionContext executionContext, params IJSObject[] arguments);
     }
 
     public interface IJSProperty

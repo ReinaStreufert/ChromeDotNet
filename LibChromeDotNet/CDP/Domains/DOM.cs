@@ -100,12 +100,12 @@ namespace LibChromeDotNet.CDP.Domains
             return CDP.Request("DOM.removeNode", jsonParams);
         }
 
-        public static ICDPRequest<RemoteObject> ResolveJavscriptNode(int nodeId)
+        public static ICDPRequest<RemoteObject> ResolveJavscriptNode(int nodeId, int executionContextId = -1)
         {
-            var jsonParams = new JObject()
-            {
-                { "nodeId", nodeId }
-            };
+            var jsonParams = new JObject();
+            jsonParams.Add("nodeId", nodeId);
+            if (executionContextId > -1)
+                jsonParams.Add("executionContextId", executionContextId);
             return CDP.Request("DOM.resolveNode", jsonParams, resultJson => new RemoteObject((JObject)resultJson["object"]!));
         }
 
