@@ -55,7 +55,7 @@ namespace LibChromeDotNet.ChromeInterop
             return session;
         }
 
-        public Task<IInteropSession> OpenSessionAsync(IInteropTarget target, params IURIFetchHandler[] handlers) => OpenSessionAsync(target, handlers);
+        public Task<IInteropSession> OpenSessionAsync(IInteropTarget target, params IURIFetchHandler[] handlers) => OpenSessionAsync(target, (IEnumerable<IURIFetchHandler>)handlers);
 
         private class ResourceFetchContext : IResourceFetchContext
         {

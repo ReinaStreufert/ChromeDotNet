@@ -89,6 +89,7 @@ namespace LibChromeDotNet.CDP
             var snapshot = _QueuedRequests.AcquireSnapshot(true);
             foreach (var message in snapshot.Items)
                 await SendRawAsync(message.Id, message.Request, CancellationToken.None);
+            _LastSweepTask = null;
             return snapshot.Time;
         }
 
@@ -207,9 +208,11 @@ namespace LibChromeDotNet.CDP
 
             public void Fulfill(JObject requestResult)
             {
-                _Result = requestResult;
                 lock (_Sync)
+                {
+                    _Result = requestResult;
                     Monitor.PulseAll(_Sync);
+                }
             }
 
             public JObject WaitForResponse()
