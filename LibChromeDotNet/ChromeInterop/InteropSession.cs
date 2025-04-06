@@ -34,6 +34,13 @@ namespace LibChromeDotNet.ChromeInterop
             await RequestAsync(Page.Close);
         }
 
+        public Task NavigatePageAsync(string url) => NavigatePageAsync(new Uri(url))!;
+
+        public async Task NavigatePageAsync(Uri url)
+        {
+            await RequestAsync(Page.Navigate(url));
+        }
+
         public async Task DetachAsync()
         {
             await _CDP.RequestAsync(Target.DetachFromTarget(_SessionId));
@@ -43,12 +50,6 @@ namespace LibChromeDotNet.ChromeInterop
         {
             var nodeTree = await RequestAsync(DOM.GetDocumentTree());
             return new DOMNode(this, nodeTree);
-        }
-
-        public async Task<IFrame> GetRootFrameAsync()
-        {
-            var frameTree = await RequestAsync(Page.GetFrameTree);
-            return new Frame(this, frameTree);
         }
 
         public Task<IJSObject> RequireModuleAsync(IJSModule module)
@@ -69,10 +70,8 @@ namespace LibChromeDotNet.ChromeInterop
             return new JSObject(this, remoteObject.ObjectId ?? throw new InvalidOperationException("Module script did not return an object"));
         }
 
-        public Task RequestAsync(ICDPRequest request) =>
-            _CDP.RequestAsync(new SessionRequest(request, _SessionId));
-        public Task<TResult> RequestAsync<TResult>(ICDPRequest<TResult> request) =>
-            _CDP.RequestAsync(new SessionRequest<TResult>(request, _SessionId));
+        public Task RequestAsync(ICDPRequest request) => _CDP.RequestAsync(request, _SessionId);
+        public Task<TResult> RequestAsync<TResult>(ICDPRequest<TResult> request) => _CDP.RequestAsync(request, _SessionId);
         public void SubscribeEvent<TParams>(ICDPEvent<TParams> targetEvent, Action<TParams> handlerCallback) =>
             _CDP.SubscribeEvent(targetEvent, handlerCallback);
 

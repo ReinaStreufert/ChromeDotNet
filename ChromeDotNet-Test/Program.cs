@@ -15,7 +15,9 @@ var interopTargets = await interopSocket.GetTargetsAsync();
 var openedWindow = interopTargets
     .Where(t => t.Type == DebugTargetType.Page)
     .First();
+await Task.Delay(5000);
 var session = await interopSocket.OpenSessionAsync(openedWindow, resourceBank);
-var rootFrame = await session.GetRootFrameAsync();
-await rootFrame.NavigateAsync("appresource:index.html");
+//Console.Write("Session open");
+//Console.WriteLine("Navigating....");
+await session.EvaluateExpressionAsync($"window.navigate(\"appresource:///testPage.html\");");
 Console.ReadLine();

@@ -10,6 +10,8 @@ namespace LibChromeDotNet.CDP.Domains
 {
     public static class Runtime
     {
+        public static ICDPRequest Enable => CDP.Request("Runtime.enable");
+
         public static ICDPRequest AddBinding(string name, string? executionContextName = null)
         {
             var jsonParams = new JObject();

@@ -9,7 +9,7 @@ namespace LibChromeDotNet.ChromeInterop
 {
     public class ManifestResourceBank : IURIFetchHandler
     {
-        public string UriPattern => $"{_Scheme}:";
+        public string UriPattern => $"{_Scheme}:///";
 
         public ManifestResourceBank(string uriScheme, Assembly sourceAssembly, string baseResourceName)
         {

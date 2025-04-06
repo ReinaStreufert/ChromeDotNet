@@ -22,7 +22,8 @@ namespace LibChromeDotNet.CDP.Domains
                 var patternArray = new JArray();
                 foreach (var pattern in patterns)
                 {
-                    var patternObject = new JObject() { "urlPattern", pattern };
+                    var patternObject = new JObject();
+                    patternObject.Add("urlPattern", pattern);
                     patternArray.Add(patternObject);
                 }
                 jsonParams.Add("patterns", patternArray);

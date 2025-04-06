@@ -13,7 +13,8 @@ namespace LibChromeDotNet.ChromeInterop
         public IInteropTarget SessionTarget { get; }
         public Task DetachAsync();
         public Task ClosePageAsync();
-        public Task<IFrame> GetRootFrameAsync();
+        public Task NavigatePageAsync(string url);
+        public Task NavigatePageAsync(Uri url);
         public Task<IDOMNode> GetDOMDocumentAsync();
         public Task<IJSObject> RequireModuleAsync(IJSModule module);
         public Task<IJSValue> EvaluateExpressionAsync(string jsExpression);

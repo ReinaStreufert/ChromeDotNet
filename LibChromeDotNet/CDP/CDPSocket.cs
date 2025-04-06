@@ -21,11 +21,9 @@ namespace LibChromeDotNet.CDP
 
         private byte[] _ReceiveBuffer;
         private Random _Rand = new Random();
-        private LockedList<QueuedRequest> _QueuedRequests = new LockedList<QueuedRequest>();
         private LockedList<PendingSentRequest> _PendingRequests = new LockedList<PendingSentRequest>();
         private LockedList<IEventSubscription> _EventSubscriptions = new LockedList<IEventSubscription>();
-        private object _SendSweepLock = new object();
-        private Task<DateTime>? _LastSweepTask;
+        private object _SendSync = new object();
         private CancellationTokenSource _ListenerCancelSource = new CancellationTokenSource();
 
         public async Task CloseAsync()
@@ -40,57 +38,28 @@ namespace LibChromeDotNet.CDP
             _ = ListenAsync(_ListenerCancelSource.Token);
         }
 
-        public async Task RequestAsync(ICDPRequest message)
+        public async Task RequestAsync(ICDPRequest message, string? sessionId = null)
         {
             var msgId = _Rand.Next();
-            await SendMessageAsync(msgId, message);
+            await SendMessageAsync(msgId, message, sessionId);
         }
 
-        public async Task<TResult> RequestAsync<TResult>(ICDPRequest<TResult> message)
+        public async Task<TResult> RequestAsync<TResult>(ICDPRequest<TResult> message, string? sessionId)
         {
             var msgId = _Rand.Next();
             var pendingSentRequest = new PendingSentRequest(msgId);
             _PendingRequests.Acquire(l => l.Add(pendingSentRequest));
-            await SendMessageAsync(msgId, message);
+            await SendMessageAsync(msgId, message, sessionId);
             var resultObject = pendingSentRequest.WaitForResponse();
             return message.GetResultFromJson(resultObject);
         }
 
-        public void SubscribeEvent<TEventParams>(ICDPEvent<TEventParams> targetEvent, Action<TEventParams> handlerCallback)
+        public void SubscribeEvent<TEventParams>(ICDPEvent<TEventParams> targetEvent, Action<TEventParams> handlerCallback, string? sessionId)
         {
             _EventSubscriptions.Acquire(subsriptions =>
             {
-                subsriptions.Add(new EventSubscription<TEventParams>(targetEvent, handlerCallback));
+                subsriptions.Add(new EventSubscription<TEventParams>(targetEvent, sessionId, handlerCallback));
             });
-        }
-
-        private async Task<DateTime> SweepMessageQueue(DateTime minValidTime)
-        {
-            for (; ;)
-            {
-                var sweepTime = await GetOrStartMessageQueueSweep();
-                if (sweepTime >= minValidTime)
-                    return sweepTime;
-            }
-        }
-
-        private Task<DateTime> GetOrStartMessageQueueSweep()
-        {
-            lock (_SendSweepLock)
-            {
-                if (_LastSweepTask == null)
-                    _LastSweepTask = SendQueuedMessagesAsync();
-                return _LastSweepTask;
-            }
-        }
-
-        private async Task<DateTime> SendQueuedMessagesAsync()
-        {
-            var snapshot = _QueuedRequests.AcquireSnapshot(true);
-            foreach (var message in snapshot.Items)
-                await SendRawAsync(message.Id, message.Request, CancellationToken.None);
-            _LastSweepTask = null;
-            return snapshot.Time;
         }
 
         private async Task ListenAsync(CancellationToken cancelToken)
@@ -99,6 +68,7 @@ namespace LibChromeDotNet.CDP
             {
                 var msgObject = await ReceiveRawAsync(cancelToken);
                 cancelToken.ThrowIfCancellationRequested();
+                Console.Write($"Message received: {msgObject}");
                 if (msgObject.ContainsKey("id"))
                 {
                     var msgId = (int)msgObject["id"]!;
@@ -106,9 +76,10 @@ namespace LibChromeDotNet.CDP
                     HandleRequestResponse(msgId, resultObject);
                 } else if (msgObject.ContainsKey("method"))
                 {
+                    var sessionId = msgObject["sessionId"]?.ToString();
                     var methodName = msgObject["method"]!.ToString();
                     var paramsObject = (JObject)msgObject["params"]!;
-                    HandleEvent(methodName, paramsObject);
+                    HandleEvent(methodName, paramsObject, sessionId);
                 }
             }
         }
@@ -130,22 +101,20 @@ namespace LibChromeDotNet.CDP
             sentRequest?.Fulfill(result);
         }
 
-        private void HandleEvent(string method, JObject paramsObject)
+        private void HandleEvent(string method, JObject paramsObject, string? sessionId)
         {
             _EventSubscriptions.Acquire(subscriptions =>
             {
-                foreach (var subscription in subscriptions.Where(s => s.MethodName == method))
+                foreach (var subscription in subscriptions.Where(s => s.MethodName == method && (s.SessionId == null || s.SessionId == sessionId)))
                     subscription.Handle(paramsObject);
             });
         }
 
-        private async Task SendMessageAsync(int id, ICDPRequest message)
+        private async Task SendMessageAsync(int id, ICDPRequest message, string? sessionId = null)
         {
-            var time = _QueuedRequests.Acquire(l =>
-            {
-                l.Add(new QueuedRequest(id, message));
-            });
-            await SweepMessageQueue(time);
+            Monitor.Enter(_SendSync);
+            await SendRawAsync(id, message, CancellationToken.None, sessionId);
+            Monitor.Exit(_SendSync);
         }
 
         private async Task<JObject> ReceiveRawAsync(CancellationToken cancelToken)
@@ -166,14 +135,17 @@ namespace LibChromeDotNet.CDP
             }
         }
 
-        private async Task SendRawAsync(int id, ICDPRequest message, CancellationToken cancelToken)
+        private async Task SendRawAsync(int id, ICDPRequest message, CancellationToken cancelToken, string? sessionId = null)
         {
             var messageObject = new JObject();
             messageObject.Add("id", id);
             messageObject.Add("method", message.MethodName);
             messageObject.Add("params", message.GetJsonParams());
+            if (sessionId != null)
+                messageObject.Add("sessionId", sessionId);
             var messageJson = messageObject.ToString();
             var sendBuffer = Encoding.UTF8.GetBytes(messageJson);
+            Console.WriteLine($"Message sent: {messageObject}");
             await _WebSocket.SendAsync(sendBuffer, WebSocketMessageType.Text, true, cancelToken);
         }
 
@@ -208,11 +180,9 @@ namespace LibChromeDotNet.CDP
 
             public void Fulfill(JObject requestResult)
             {
+                _Result = requestResult;
                 lock (_Sync)
-                {
-                    _Result = requestResult;
                     Monitor.PulseAll(_Sync);
-                }
             }
 
             public JObject WaitForResponse()
@@ -232,6 +202,7 @@ namespace LibChromeDotNet.CDP
         private interface IEventSubscription
         {
             string MethodName { get; }
+            string? SessionId { get; }
             void Handle(JObject jsonParams);
         }
 
@@ -239,11 +210,13 @@ namespace LibChromeDotNet.CDP
         {
             public ICDPEvent<TParams> Event { get; }
             public Action<TParams> Callback { get; }
+            public string? SessionId { get; }
             public string MethodName => Event.MethodName;
 
-            public EventSubscription(ICDPEvent<TParams> subscribedEvent, Action<TParams> callback)
+            public EventSubscription(ICDPEvent<TParams> subscribedEvent, string? sessionId, Action<TParams> callback)
             {
                 Event = subscribedEvent;
+                SessionId = sessionId;
                 Callback = callback;
             }
 

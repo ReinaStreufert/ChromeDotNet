@@ -37,11 +37,8 @@ namespace LibChromeDotNet.ChromeInterop
         {
             var sessionId = await _CDP.RequestAsync(Target.AttachToTarget(target.Id));
             var session = new InteropSession(this, target, _CDP, sessionId);
-            var rootFrame = await session.GetRootFrameAsync();
             _CDP.SubscribeEvent(Fetch.OnRequestPaused, requestPausedEvent =>
             {
-                if (!IFrame.IsChildFrame(rootFrame, requestPausedEvent.FrameId))
-                    return;
                 var requestUrl = requestPausedEvent.Request.RequestUri.ToString();
                 var matchingHandlers = handlers
                     .Where(h => requestUrl.StartsWith(h.UriPattern));
@@ -52,6 +49,7 @@ namespace LibChromeDotNet.ChromeInterop
             var uriPatterns = handlers
                 .Select(h => h.UriPattern);
             await session.RequestAsync(Fetch.Enable(uriPatterns));
+            await session.RequestAsync(Runtime.Enable);
             return session;
         }
 

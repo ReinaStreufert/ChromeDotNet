@@ -9,12 +9,14 @@ namespace LibChromeDotNet.CDP.Domains
 {
     public static class Page
     {
+        public static ICDPRequest Enable => CDP.Request("Page.enable");
+
         public static ICDPRequest Close => CDP.Request("Page.close");
 
         public static ICDPRequest<FrameTree> GetFrameTree =>
             CDP.Request("Page.getFrameTree", new JObject(), paramsJson => new FrameTree((JObject)paramsJson["frameTree"]!));
 
-        public static ICDPRequest<int> Navigate(Uri url, int frameId = -1)
+        public static ICDPRequest Navigate(Uri url, int frameId = -1)
         {
             var jsonParams = new JObject();
             jsonParams.Add("url", url.ToString());
