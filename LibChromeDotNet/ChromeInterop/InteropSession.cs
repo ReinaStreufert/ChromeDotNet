@@ -45,7 +45,7 @@ namespace LibChromeDotNet.ChromeInterop
             return new DOMNode(this, nodeTree);
         }
 
-        public async Task<IFrame> GetFrameTreeAsync()
+        public async Task<IFrame> GetRootFrameAsync()
         {
             var frameTree = await RequestAsync(Page.GetFrameTree);
             return new Frame(this, frameTree);
@@ -56,17 +56,17 @@ namespace LibChromeDotNet.ChromeInterop
             return _LoadedModules.GetOrAdd(module.Key, o => LoadJSModuleAsync(module));
         }
 
-        public async Task<IJSObject> EvaluateExpressionAsync(string jsExpression)
+        public async Task<IJSValue> EvaluateExpressionAsync(string jsExpression)
         {
             var remoteObject = await RequestAsync(Runtime.Evaluate(jsExpression));
-            return new JSObject(this, remoteObject);
+            return IJSValue.FromRemoteObject(this, remoteObject);
         }
 
         private async Task<IJSObject> LoadJSModuleAsync(IJSModule module)
         {
             var jsSource = await module.GetScriptSourceAsync();
             var remoteObject = await RequestAsync(Runtime.Evaluate($"(function(){{{jsSource}}})();"));
-            return new JSObject(this, remoteObject);
+            return new JSObject(this, remoteObject.ObjectId ?? throw new InvalidOperationException("Module script did not return an object"));
         }
 
         public Task RequestAsync(ICDPRequest request) =>

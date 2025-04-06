@@ -57,7 +57,7 @@ namespace LibChromeDotNet.ChromeApplication
         public abstract OSPlatform ReleasePlatform { get; }
         protected abstract string DownloadPlatformId { get; }
         protected abstract string GetLaunchPath(string baseArchivePath);
-        public bool IsInstalled => File.Exists(GetInstallPath());
+        public bool IsInstalled => Directory.Exists(GetInstallPath());
 
         public PlatformIndependentLauncher(string releaseVersion, Architecture releaseArchitecture)
         {
@@ -82,17 +82,13 @@ namespace LibChromeDotNet.ChromeApplication
             }
         }
 
-        public async Task<IBrowser> LaunchAsync(string uri, int debugPort)
+        public async Task<IBrowser> LaunchAsync(string uri, int debugPort = 0)
         {
             await EnsureInstalledAsync();
             var launchPath = GetLaunchPath(GetInstallPath());
-            var processParams = new StringBuilder();
-            processParams.Append("--enable-logging --new-window --disable-infobars ");
-            processParams.Append($"--app={uri} ");
-            processParams.Append($"--remote-debugging-port={debugPort}");
-            var psi = new ProcessStartInfo(launchPath, processParams.ToString());
+            var psi = new ProcessStartInfo(launchPath);
+            psi.Arguments = $"--remote-debugging-port={debugPort} --enable-logging --app={uri} --new-window --disable-infobars";
             psi.RedirectStandardError = true;
-            psi.UseShellExecute = false;
             var process = Process.Start(psi);
             if (process == null)
                 throw new InvalidOperationException();

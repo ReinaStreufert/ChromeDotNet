@@ -14,6 +14,6 @@ namespace LibChromeDotNet.ChromeApplication
         public Architecture ReleaseArchitecture { get; }
         public bool IsInstalled { get; }
         public Task EnsureInstalledAsync();
-        public Task<IBrowser> LaunchAsync(string uri, int debugPort);
+        public Task<IBrowser> LaunchAsync(string uri, int debugPort = 0);
     }
 }

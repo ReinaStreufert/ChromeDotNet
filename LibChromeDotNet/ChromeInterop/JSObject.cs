@@ -10,34 +10,30 @@ namespace LibChromeDotNet.ChromeInterop
     public class JSObject : IJSObject
     {
         private IInteropSession _Session;
-        private RemoteObject _ObjectInfo;
+        protected string _ObjectId;
 
-        public JSObject(IInteropSession session, RemoteObject objectInfo)
+        public JSObject(IInteropSession session, string objectId)
         {
             _Session = session;
-            _ObjectInfo = objectInfo;
+            _ObjectId = objectId;
         }
 
-        public JSType Type => throw new NotImplementedException();
+        public JSType Type => JSType.Object;
+        public IInteropSession Session => _Session;
 
-        public Task<IJSObject?> CallFunctionAsync(string name, params IJSObject[] arguments)
+        public virtual RemoteObject AsRemoteObject()
         {
-            throw new NotImplementedException();
+            return new RemoteObject()
+            {
+                Type = JSType.Object,
+                ObjectId = _ObjectId
+            };
         }
 
-        public Task<IEnumerable<string>> GetKeysAsync()
+        public async Task<IJSValue> CallFunctionAsync(string name, params IJSValue[] arguments)
         {
-            throw new NotImplementedException();
-        }
-
-        public Task<IEnumerable<IJSProperty>> GetPropertiesAsync()
-        {
-            throw new NotImplementedException();
-        }
-
-        public Task<IEnumerable<IJSObject>> GetValuesAsync()
-        {
-            throw new NotImplementedException();
+            var remoteObject = await _Session.RequestAsync(Runtime.CallFunctionOn(_ObjectId, name, arguments.Select(a => a.AsRemoteObject())));
+            return IJSValue.FromRemoteObject(_Session, remoteObject);
         }
     }
 }

@@ -8,7 +8,7 @@ namespace LibChromeDotNet.ChromeInterop
 {
     public interface IURIFetchHandler
     {
-        public string? UriPattern { get; }
+        public string UriPattern { get; }
         public Task HandleAsync(IResourceFetchContext fetchContext);
     }
 
@@ -32,7 +32,6 @@ namespace LibChromeDotNet.ChromeInterop
     {
         public int ResponseCode { get; }
         public void SetHeader(string key, string value);
-        public void SetHeader(string key, ReadOnlySpan<byte> value);
         public void SetBody(byte[] responseData);
     }
 

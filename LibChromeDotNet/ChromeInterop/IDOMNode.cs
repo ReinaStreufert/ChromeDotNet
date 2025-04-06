@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace LibChromeDotNet.ChromeInterop
 {
-    public interface IDOMNode
+    public interface IDOMNode : IInteropObject
     {
         public string Name { get; }
         public Task<IJSObject> GetJavascriptNodeAsync();

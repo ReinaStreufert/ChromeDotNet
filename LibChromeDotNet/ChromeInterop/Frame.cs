@@ -19,6 +19,8 @@ namespace LibChromeDotNet.ChromeInterop
             _Tree = tree;
         }
 
+        public int Id => _FrameInfo.Id;
+        public IInteropSession Session => _Session;
         public Uri NavigationUrl => _FrameInfo.NavigationUri;
         public IEnumerable<IFrame> Children => _Tree.Children
             .Select(t => new Frame(_Session, t));
@@ -27,5 +29,7 @@ namespace LibChromeDotNet.ChromeInterop
         {
             await _Session.RequestAsync(Page.Navigate(url, _FrameInfo.Id));
         }
+
+        public Task NavigateAsync(string url) => NavigateAsync(new Uri(url));
     }
 }

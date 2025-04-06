@@ -20,6 +20,7 @@ namespace LibChromeDotNet.ChromeInterop
         }
 
         public string Name => _NodeInfo.Name;
+        public IInteropSession Session => _Session;
 
         public async Task DeleteNodeAsync()
         {
@@ -44,7 +45,7 @@ namespace LibChromeDotNet.ChromeInterop
         public async Task<IJSObject> GetJavascriptNodeAsync()
         {
             var remoteObject = await _Session.RequestAsync(DOM.ResolveJavscriptNode(_NodeInfo.Id));
-            return new JSObject(_Session, remoteObject);
+            return new JSObject(_Session, remoteObject.ObjectId!);
         }
 
         public async Task<IDOMNode> QuerySelectAsync(string selector)

@@ -19,7 +19,9 @@ namespace LibChromeDotNet.CDP.Domains
             return CDP.Request("Runtime.addBinding", jsonParams);
         }
 
-        public static ICDPRequest<RemoteObject> CallFunctionOn(string objectId, string functionName, params RemoteObject[] arguments)
+        public static ICDPRequest<RemoteObject> CalLFunctionOn(string objectId, string functionName, params RemoteObject[] arguments) =>
+            CallFunctionOn(objectId, functionName, arguments);
+        public static ICDPRequest<RemoteObject> CallFunctionOn(string objectId, string functionName, IEnumerable<RemoteObject> arguments)
         {
             var jsonParams = new JObject()
             {
@@ -30,7 +32,9 @@ namespace LibChromeDotNet.CDP.Domains
             return RemoteObjectResult("Runtime.callFunctionOn", jsonParams);
         }
 
-        public static ICDPRequest<RemoteObject> CallFunctionOn(int executionContextId, string functionName, params RemoteObject[] arguments)
+        public static ICDPRequest<RemoteObject> CallFunctionOn(int executionContextId, string functionName, params RemoteObject[] arguments) =>
+            CallFunctionOn(executionContextId, functionName, arguments);
+        public static ICDPRequest<RemoteObject> CallFunctionOn(int executionContextId, string functionName, IEnumerable<RemoteObject> arguments)
         {
             var jsonParams = new JObject()
             {
@@ -53,7 +57,7 @@ namespace LibChromeDotNet.CDP.Domains
         private static ICDPRequest<RemoteObject> RemoteObjectResult(string method, JObject jsonParams) =>
             CDP.Request(method, jsonParams, resultJson => new RemoteObject((JObject)resultJson["result"]!));
 
-        private static JArray CreateArgumentsJson(RemoteObject[] arguments)
+        private static JArray CreateArgumentsJson(IEnumerable<RemoteObject> arguments)
         {
             var jsonArray = new JArray();
             foreach (var obj in arguments)

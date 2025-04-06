@@ -21,7 +21,10 @@ namespace LibChromeDotNet.CDP.Domains
             {
                 var patternArray = new JArray();
                 foreach (var pattern in patterns)
-                    patternArray.Add(pattern);
+                {
+                    var patternObject = new JObject() { "urlPattern", pattern };
+                    patternArray.Add(patternObject);
+                }
                 jsonParams.Add("patterns", patternArray);
             }
             return CDP.Request("Fetch.enable", jsonParams);
@@ -76,12 +79,14 @@ namespace LibChromeDotNet.CDP.Domains
     public struct RequestPausedEvent
     {
         public string Id;
+        public int FrameId;
         public FetchResourceType ResourceType;
         public HttpRequestInfo Request;
 
         public RequestPausedEvent(JObject jsonParams)
         {
             Id = jsonParams["requestId"]!.ToString();
+            FrameId = (int)jsonParams["frameId"]!;
             ResourceType = Enum.Parse<FetchResourceType>(jsonParams["resourceType"]!.ToString());
             Request = new HttpRequestInfo((JObject)jsonParams["request"]!);
         }

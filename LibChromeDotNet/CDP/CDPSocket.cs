@@ -52,7 +52,7 @@ namespace LibChromeDotNet.CDP
             var pendingSentRequest = new PendingSentRequest(msgId);
             _PendingRequests.Acquire(l => l.Add(pendingSentRequest));
             await SendMessageAsync(msgId, message);
-            var resultObject = await pendingSentRequest.GetResponseAsync();
+            var resultObject = pendingSentRequest.WaitForResponse();
             return message.GetResultFromJson(resultObject);
         }
 
@@ -114,6 +114,7 @@ namespace LibChromeDotNet.CDP
 
         private void HandleRequestResponse(int id, JObject result)
         {
+            PendingSentRequest? sentRequest = null;
             _PendingRequests.Acquire(pendingList =>
             {
                 var matchingRequests = pendingList
@@ -123,8 +124,9 @@ namespace LibChromeDotNet.CDP
                     return;
                 var pendingRequest = matchingRequests.First();
                 pendingList.RemoveAt(pendingRequest.Key);
-                pendingRequest.Value.Fulfill(result);
+                sentRequest = pendingRequest.Value;
             });
+            sentRequest?.Fulfill(result);
         }
 
         private void HandleEvent(string method, JObject paramsObject)
@@ -189,11 +191,6 @@ namespace LibChromeDotNet.CDP
                 Id = id;
                 Request = request;
             }
-
-            private TaskCompletionSource _TaskSource = new TaskCompletionSource();
-
-            public void MarkSent() => _TaskSource.SetResult();
-            public async Task WaitUntilSentAsync() => await _TaskSource.Task;
         }
 
         private class PendingSentRequest
@@ -205,16 +202,27 @@ namespace LibChromeDotNet.CDP
                 Id = id;
             }
 
-            private TaskCompletionSource<JObject> _TaskSource = new TaskCompletionSource<JObject>();
+            private object _Sync = new object();
+            private JObject? _Result;
 
             public void Fulfill(JObject requestResult)
             {
-                _TaskSource.SetResult(requestResult);
+                _Result = requestResult;
+                lock (_Sync)
+                    Monitor.PulseAll(_Sync);
             }
 
-            public async Task<JObject> GetResponseAsync()
+            public JObject WaitForResponse()
             {
-                return await _TaskSource.Task;
+                if (_Result != null)
+                    return _Result;
+                lock (_Sync)
+                {
+                    if (_Result != null)
+                        return _Result;
+                    Monitor.Wait(_Sync);
+                    return _Result!;
+                }
             }
         }
 
