@@ -10,9 +10,10 @@ namespace LibChromeDotNet.ChromeInterop
     {
         public Task CloseAsync();
         public Task<IEnumerable<IInteropTarget>> GetTargetsAsync();
+        public Task<IInteropTarget> CreateTargetAsync(string url, bool newWindow = false);
+        public Task<IInteropTarget> CreateTargetAsync(Uri url, bool newWindow = false);
         public Task EnableTargetDiscoveryAsync(Action<IInteropTarget> tarqetCreated, Action<string> targetDestroyed);
-        public Task<IInteropSession> OpenSessionAsync(IInteropTarget target, IEnumerable<IURIFetchHandler> handlers);
-        public Task<IInteropSession> OpenSessionAsync(IInteropTarget target, params IURIFetchHandler[] handlers);
+        public Task<IInteropSession> OpenSessionAsync(IInteropTarget target);
     }
 
     public interface IInteropTarget

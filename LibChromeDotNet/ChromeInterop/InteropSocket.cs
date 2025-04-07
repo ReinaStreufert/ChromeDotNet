@@ -33,90 +33,25 @@ namespace LibChromeDotNet.ChromeInterop
                 .Cast<IInteropTarget>();
         }
 
-        public async Task<IInteropSession> OpenSessionAsync(IInteropTarget target, IEnumerable<IURIFetchHandler> handlers)
+        public async Task<IInteropSession> OpenSessionAsync(IInteropTarget target)
         {
             var sessionId = await _CDP.RequestAsync(Target.AttachToTarget(target.Id));
             var session = new InteropSession(this, target, _CDP, sessionId);
-            _CDP.SubscribeEvent(Fetch.OnRequestPaused, requestPausedEvent =>
-            {
-                var requestUrl = requestPausedEvent.Request.RequestUri.ToString();
-                var matchingHandlers = handlers
-                    .Where(h => requestUrl.StartsWith(h.UriPattern));
-                var fetchContext = new ResourceFetchContext(session, requestPausedEvent.ResourceType, requestPausedEvent.Request, requestPausedEvent.Id);
-                foreach (var handler in matchingHandlers)
-                    _ = handler.HandleAsync(fetchContext);
-            });
-            var uriPatterns = handlers
-                .Select(h => h.UriPattern);
-            await session.RequestAsync(Fetch.Enable(uriPatterns));
             await session.RequestAsync(Runtime.Enable);
             return session;
         }
 
-        public Task<IInteropSession> OpenSessionAsync(IInteropTarget target, params IURIFetchHandler[] handlers) => OpenSessionAsync(target, (IEnumerable<IURIFetchHandler>)handlers);
-
-        private class ResourceFetchContext : IResourceFetchContext
+        public Task<IInteropTarget> CreateTargetAsync(string url, bool newWindow = true) => CreateTargetAsync(new Uri(url), newWindow);
+        public async Task<IInteropTarget> CreateTargetAsync(Uri url, bool newWindow = true)
         {
-            private IInteropSession _Session;
-            private FetchResourceType _ResourceType;
-            private IHttpRequestInfo _RequestInfo;
-            private string _RequestId;
-
-            public ResourceFetchContext(IInteropSession session, FetchResourceType resourceType, IHttpRequestInfo requestInfo, string requestId)
+            var targetId = await _CDP.RequestAsync(Target.CreateTarget(url, newWindow));
+            return new TargetInfo()
             {
-                _Session = session;
-                _ResourceType = resourceType;
-                _RequestInfo = requestInfo;
-                _RequestId = requestId;
-            }
-
-            public FetchResourceType ResourceType => _ResourceType;
-            public IHttpRequestInfo Request => _RequestInfo;
-
-            public async Task ContinueRequestAsync() =>
-                await _Session.RequestAsync(Fetch.ContinueRequest(_RequestId));
-
-            public async Task FailRequestAsync(FailReason reason = FailReason.Failed) =>
-                await _Session.RequestAsync(Fetch.FailRequest(_RequestId, reason));
-
-            public async Task FulfillRequestAsync(int responseCode, Action<IFetchHandlerHttpResponse> responseCallback)
-            {
-                var response = new HttpResponse(_Session, _RequestId, responseCode);
-                responseCallback(response);
-                await response.SendAsync();
-            }
-        }
-
-        private class HttpResponse : IFetchHandlerHttpResponse
-        {
-            public int ResponseCode { get; }
-
-            private IInteropSession _Session;
-            private string _RequestId;
-            private Dictionary<string, string> _Headers = new Dictionary<string, string>();
-            private byte[]? _ResponseData;
-
-            public HttpResponse(IInteropSession session, string requestId, int responseCode)
-            {
-                ResponseCode = responseCode;
-                _Session = session;
-                _RequestId = requestId;
-            }
-
-            public void SetBody(byte[] responseData)
-            {
-                _ResponseData = responseData;
-            }
-
-            public void SetHeader(string key, string value)
-            {
-                _Headers[key] = value;
-            }
-
-            public async Task SendAsync()
-            {
-                await _Session.RequestAsync(Fetch.FulfillRequest(_RequestId, ResponseCode, _Headers, _ResponseData));
-            }
+                Id = targetId,
+                NavigationUri = url,
+                Title = string.Empty,
+                Type = DebugTargetType.Tab
+            };
         }
     }
 }

@@ -5,7 +5,7 @@ using LibChromeDotNet.ChromeInterop;
 using System.Reflection;
 
 var launcher = ChromeLauncher.CreateForPlatform();
-var resourceBank = new ManifestResourceBank("appresource", Assembly.GetExecutingAssembly(), "ChromeDotNet_Test.sources");
+//var resourceBank = new ManifestResourceBank("http", "appresource", Assembly.GetExecutingAssembly(), "ChromeDotNet_Test.sources");
 var cdpSocket = new CDPSocket();
 var browser = await launcher.LaunchAsync("https://www.google.com");
 
@@ -16,8 +16,7 @@ var openedWindow = interopTargets
     .Where(t => t.Type == DebugTargetType.Page)
     .First();
 await Task.Delay(5000);
-var session = await interopSocket.OpenSessionAsync(openedWindow, resourceBank);
-//Console.Write("Session open");
-//Console.WriteLine("Navigating....");
-await session.EvaluateExpressionAsync($"window.navigate(\"appresource:///testPage.html\");");
+var session = await interopSocket.OpenSessionAsync(openedWindow);
+//await session.EvaluateExpressionAsync("alert('hello')");
+await interopSocket.CreateTargetAsync("about:blank", false);
 Console.ReadLine();

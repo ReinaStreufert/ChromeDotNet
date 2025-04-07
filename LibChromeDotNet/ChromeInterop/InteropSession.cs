@@ -72,51 +72,6 @@ namespace LibChromeDotNet.ChromeInterop
 
         public Task RequestAsync(ICDPRequest request) => _CDP.RequestAsync(request, _SessionId);
         public Task<TResult> RequestAsync<TResult>(ICDPRequest<TResult> request) => _CDP.RequestAsync(request, _SessionId);
-        public void SubscribeEvent<TParams>(ICDPEvent<TParams> targetEvent, Action<TParams> handlerCallback) =>
-            _CDP.SubscribeEvent(targetEvent, handlerCallback);
-
-        private class SessionRequest : ICDPRequest
-        {
-            private ICDPRequest _BaseRequest;
-            private string _SessionId;
-
-            public SessionRequest(ICDPRequest baseRequest, string sessionId)
-            {
-                _BaseRequest = baseRequest;
-                _SessionId = sessionId;
-            }
-
-            public string MethodName => _BaseRequest.MethodName;
-
-            public JObject GetJsonParams()
-            {
-                var jsonParams = _BaseRequest.GetJsonParams();
-                jsonParams.Add("sessionId", _SessionId);
-                return jsonParams;
-            }
-        }
-
-        private class SessionRequest<TResult> : ICDPRequest<TResult>
-        {
-            private ICDPRequest<TResult> _BaseRequest;
-            private string _SessionId;
-
-            public SessionRequest(ICDPRequest<TResult> baseRequest, string sessionId)
-            {
-                _BaseRequest = baseRequest;
-                _SessionId = sessionId;
-            }
-
-            public string MethodName => _BaseRequest.MethodName;
-
-            public JObject GetJsonParams()
-            {
-                var jsonParams = _BaseRequest.GetJsonParams();
-                jsonParams.Add("sessionId", _SessionId);
-                return jsonParams;
-            }
-
-            public TResult GetResultFromJson(JObject resultObject) => _BaseRequest.GetResultFromJson(resultObject);
-        }
+        public void SubscribeEvent<TParams>(ICDPEvent<TParams> targetEvent, Action<TParams> handlerCallback) => _CDP.SubscribeEvent(targetEvent, handlerCallback, _SessionId);
     }
 }

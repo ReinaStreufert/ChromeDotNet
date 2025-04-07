@@ -23,6 +23,17 @@ namespace LibChromeDotNet.CDP.Domains
             });
         }
 
+        public static ICDPRequest<string> CreateTarget(Uri url, bool newWindow = true, bool hidden = false)
+        {
+            var paramsJson = new JObject()
+            {
+                { "url", url.ToString() },
+                { "newWindow", newWindow },
+                { "hidden", hidden }
+            };
+            return CDP.Request("Target.createTarget", paramsJson, jsonResult => jsonResult["targetId"]!.ToString());
+        }
+
         public static ICDPRequest<string> AttachToTarget(string targetId, bool flatten = true)
         {
             var paramsJson = new JObject
