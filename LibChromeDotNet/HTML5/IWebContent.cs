@@ -14,7 +14,8 @@ namespace LibChromeDotNet.HTML5
 
     public interface IContentSource
     {
-        public Stream GetContentStream();
+        public string Path { get; }
         public string MimeType { get; }
+        public void WriteToStream(Stream destStream);
     }
 }

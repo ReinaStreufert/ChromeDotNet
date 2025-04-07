@@ -22,8 +22,7 @@ namespace LibChromeDotNet.ChromeApplication
         private IWebApp _App;
         private IChromeLauncher _Launcher;
         private IWebContentHost _ContentHost = new WebContentHost();
-        private IBrowser? _Browser;
-        private IInteropSocket? _Socket;
+        private Task<IInteropSocket>? _InitTask;
         private object _InitLock = new object();
 
         public async Task LaunchAsync()
@@ -36,33 +35,43 @@ namespace LibChromeDotNet.ChromeApplication
         public async void Close()
         {
             _ContentHost.StopListening();
-            if (_Socket != null)
-                await _Socket.CloseAsync();
+            if (_InitTask != null)
+            {
+                var socket = await _InitTask;
+                await socket.CloseAsync();
+            }
+        }
+
+        private async Task<IInteropSocket> InitializeChromeAsync(string initialUrl)
+        {
+            var browser = await _Launcher.LaunchAsync(initialUrl);
+            var cdp = new CDPSocket();
+            await cdp.ConnectAsync(browser.CDPTarget, CancellationToken.None);
+            return new InteropSocket(cdp);
         }
 
         private async Task<IInteropSession> CreateNewSession(Uri url)
         {
             bool rootWindow = false;
-            Monitor.Enter(_InitLock);
-            if (_Socket == null)
+            lock (_InitLock)
             {
-                rootWindow = true;
-                _Browser = await _Launcher.LaunchAsync(url.ToString());
-                var cdpSocket = new CDPSocket();
-                await cdpSocket.ConnectAsync(_Browser.CDPTarget, CancellationToken.None);
-                _Socket = new InteropSocket(cdpSocket);
+                if (_InitTask == null)
+                {
+                    rootWindow = true;
+                    _InitTask = InitializeChromeAsync(url.ToString());
+                }
             }
-            Monitor.Enter(_InitLock);
+            var socket = await _InitTask;
             if (rootWindow)
             {
-                var rootTarget = (await _Socket.GetTargetsAsync())
+                var rootTarget = (await socket.GetTargetsAsync())
                     .Where(t => t.Type == DebugTargetType.Page)
                     .First();
-                return await _Socket.OpenSessionAsync(rootTarget);
+                return await socket.OpenSessionAsync(rootTarget);
             } else
             {
-                var newTarget = await _Socket.CreateTargetAsync(url);
-                return await _Socket.OpenSessionAsync(newTarget);
+                var newTarget = await socket.CreateTargetAsync(url);
+                return await socket.OpenSessionAsync(newTarget);
             }
         }
 

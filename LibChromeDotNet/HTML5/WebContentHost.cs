@@ -41,10 +41,10 @@ namespace LibChromeDotNet.HTML5
                     _Listener.Prefixes.Clear();
                 }
             }
-            _ = ServeWebContentAsync(_Listener, webContentSource, _ListenerCancelSource.Token);
+            _ = ServeWebContentAsync(_Listener, _Uuid, webContentSource, _ListenerCancelSource.Token);
         }
 
-        private static async Task ServeWebContentAsync(HttpListener listener, IWebContent webContentSource, CancellationToken cancelToken)
+        private static async Task ServeWebContentAsync(HttpListener listener, Guid uuid, IWebContent webContentSource, CancellationToken cancelToken)
         {
             while (!cancelToken.IsCancellationRequested)
             {
@@ -52,7 +52,9 @@ namespace LibChromeDotNet.HTML5
                 var url = requestContext.Request.Url;
                 if (url == null) // why is Url nullable?
                     continue;
-                var resourcePath = url.AbsolutePath;
+                if (url.Segments.Length < 2 || !url.Segments[1].StartsWith(uuid.ToString(), StringComparison.InvariantCultureIgnoreCase))
+                    continue;
+                var resourcePath = string.Concat(url.Segments.Skip(2));
                 IContentSource? webContent;
                 if (resourcePath == "/" || resourcePath == string.Empty)
                     webContent = await webContentSource.GetIndexResourceAsync();
@@ -67,8 +69,7 @@ namespace LibChromeDotNet.HTML5
                 {
                     response.StatusCode = 200; // 200 okay
                     response.ContentType = webContent.MimeType;
-                    var contentStream = webContent.GetContentStream();
-                    contentStream.CopyTo(response.OutputStream);
+                    webContent.WriteToStream(response.OutputStream);
                 }
                 response.Close();
             }

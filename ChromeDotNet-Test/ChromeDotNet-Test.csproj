@@ -9,6 +9,14 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <None Remove="webSources\index.html" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <EmbeddedResource Include="webSources\index.html" />
+  </ItemGroup>
+
+  <ItemGroup>
     <ProjectReference Include="..\LibChromeDotNet\LibChromeDotNet.csproj" />
   </ItemGroup>
 
