@@ -8,6 +8,7 @@ namespace LibChromeDotNet.HTML5
 {
     public interface IWebApp
     {
-        public Task StartAsync(IAppContext context);
+        public IWebContent Content { get; }
+        public Task OnStartupAsync(IAppContext context);
     }
 }

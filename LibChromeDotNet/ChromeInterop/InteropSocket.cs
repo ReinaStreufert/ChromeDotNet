@@ -41,16 +41,18 @@ namespace LibChromeDotNet.ChromeInterop
             return session;
         }
 
-        public Task<IInteropTarget> CreateTargetAsync(string url, bool newWindow = true) => CreateTargetAsync(new Uri(url), newWindow);
-        public async Task<IInteropTarget> CreateTargetAsync(Uri url, bool newWindow = true)
+        public Task<IInteropTarget> CreateTargetAsync(string url) => CreateTargetAsync(new Uri(url));
+        public Task<IInteropTarget> CreateTargetAsync(Uri url) => CreateTargetAsync(url, 0, 0);
+        public Task<IInteropTarget> CreateTargetAsync(string url, int width, int height) => CreateTargetAsync(new Uri(url), width, height);
+        public async Task<IInteropTarget> CreateTargetAsync(Uri url, int width, int height)
         {
-            var targetId = await _CDP.RequestAsync(Target.CreateTarget(url, newWindow));
+            var targetId = await _CDP.RequestAsync(Target.CreateTarget(url, true, width, height));
             return new TargetInfo()
             {
                 Id = targetId,
                 NavigationUri = url,
                 Title = string.Empty,
-                Type = DebugTargetType.Tab
+                Type = DebugTargetType.Page
             };
         }
     }
