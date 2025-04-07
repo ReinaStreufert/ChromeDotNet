@@ -9,16 +9,18 @@ namespace LibChromeDotNet.CDP.Domains
 {
     public static class DOM
     {
+        public static ICDPRequest Enable => CDP.Request("DOM.enable");
+
         public static ICDPRequest<DOMNodeInfo> GetDocument =>
             CDP.Request("DOM.getDocument", new JObject(), resultJson => new DOMNodeInfo((JObject)resultJson["root"]!));
 
         public static ICDPRequest<DOMNodeTree> GetDocumentTree(int depth = -1)
         {
-            var jsonParams = new JObject()
+            /*var jsonParams = new JObject()
             {
                 { "depth", depth }
-            };
-            return CDP.Request("DOM.getDocument", jsonParams, resultJson => new DOMNodeTree((JObject)resultJson["root"]!, depth));
+            };*/
+            return CDP.Request("DOM.getDocument", new JObject(), resultJson => new DOMNodeTree((JObject)resultJson["root"]!, depth));
         }
 
         public static ICDPRequest<IEnumerable<KeyValuePair<string, string>>> GetAttributes(int nodeId)
@@ -66,7 +68,8 @@ namespace LibChromeDotNet.CDP.Domains
         {
             var jsonParams = new JObject()
             {
-                { "nodeId", rootNodeId }
+                { "nodeId", rootNodeId },
+                { "depth", depth }
             };
             return CDP.Request("DOM.describeNode", jsonParams, resultJson => new DOMNodeTree((JObject)resultJson["node"]!, depth));
         }
@@ -127,15 +130,30 @@ namespace LibChromeDotNet.CDP.Domains
         }
     }
 
+    public enum DOMNodeType : int
+    {
+        Element = 1,
+        Attribute = 2,
+        Text = 3,
+        CDataSection = 4,
+        ProcessingInstruction = 7,
+        Comment = 8,
+        Document = 9,
+        DocumentType = 10,
+        DocumentFragment = 11
+    }
+
     public struct DOMNodeInfo
     {
         public int Id;
+        public DOMNodeType NodeType;
         public string Name;
         public string Value;
 
         public DOMNodeInfo(JObject nodeJson)
         {
             Id = (int)nodeJson["nodeId"]!;
+            NodeType = (DOMNodeType)((int)nodeJson["nodeType"]!);
             Name = nodeJson["nodeName"]!.ToString();
             Value = nodeJson["nodeValue"]!.ToString();
         }

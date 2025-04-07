@@ -1,13 +1,13 @@
 ﻿using LibChromeDotNet.CDP;
+using LibChromeDotNet.ChromeApplication;
 using LibChromeDotNet.ChromeInterop;
-using LibChromeDotNet.HTML5;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace LibChromeDotNet.ChromeApplication
+namespace LibChromeDotNet.HTML5
 {
     public class WebAppHost : IWebAppHost
     {
@@ -68,7 +68,8 @@ namespace LibChromeDotNet.ChromeApplication
                     .Where(t => t.Type == DebugTargetType.Page)
                     .First();
                 return await socket.OpenSessionAsync(rootTarget);
-            } else
+            }
+            else
             {
                 var newTarget = await socket.CreateTargetAsync(url);
                 return await socket.OpenSessionAsync(newTarget);
@@ -87,6 +88,7 @@ namespace LibChromeDotNet.ChromeApplication
             public async Task<IAppWindow> OpenWindow(string contentPath = "/")
             {
                 var session = await _Host.CreateNewSession(_Host._ContentHost.GetContentUri(contentPath));
+                await session.ReloadPageAsync();
                 return new AppWindow(_Host, session);
             }
         }
@@ -100,7 +102,10 @@ namespace LibChromeDotNet.ChromeApplication
             {
                 _Host = host;
                 _Session = session;
+                session.PageLoaded += () => PageLoaded?.Invoke(this);
             }
+
+            public event AsyncWindowEvent? PageLoaded;
 
             public async Task CloseAsync()
             {

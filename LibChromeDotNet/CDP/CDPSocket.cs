@@ -106,7 +106,7 @@ namespace LibChromeDotNet.CDP
             _EventSubscriptions.Acquire(subscriptions =>
             {
                 foreach (var subscription in subscriptions.Where(s => s.MethodName == method && (s.SessionId == null || s.SessionId == sessionId)))
-                    subscription.Handle(paramsObject);
+                    Task.Run(() => subscription.Handle(paramsObject));
             });
         }
 

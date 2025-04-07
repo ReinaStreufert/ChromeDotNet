@@ -37,7 +37,8 @@ namespace LibChromeDotNet.ChromeInterop
         {
             var sessionId = await _CDP.RequestAsync(Target.AttachToTarget(target.Id));
             var session = new InteropSession(this, target, _CDP, sessionId);
-            await session.RequestAsync(Runtime.Enable);
+            _ = session.RequestAsync(Page.Enable);
+            _ = session.RequestAsync(Runtime.Enable);
             return session;
         }
 

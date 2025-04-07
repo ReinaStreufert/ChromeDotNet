@@ -14,6 +14,7 @@ namespace LibChromeDotNet.ChromeInterop
     {
         public IInteropSocket Socket => _InteropSocket;
         public IInteropTarget SessionTarget => _Target;
+        public event Action? PageLoaded;
 
         public InteropSession(IInteropSocket interopSocket, IInteropTarget target, ICDPSocket cdpSocket, string sessionId)
         {
@@ -21,6 +22,7 @@ namespace LibChromeDotNet.ChromeInterop
             _Target = target;
             _CDP = cdpSocket;
             _SessionId = sessionId;
+            SubscribeEvent(Page.DOMContentLoaded, t => PageLoaded?.Invoke());
         }
 
         private IInteropSocket _InteropSocket;
@@ -33,6 +35,8 @@ namespace LibChromeDotNet.ChromeInterop
         {
             await RequestAsync(Page.Close);
         }
+
+        public async Task ReloadPageAsync() => await RequestAsync(Page.Reload);
 
         public Task NavigatePageAsync(string url) => NavigatePageAsync(new Uri(url))!;
 

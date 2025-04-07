@@ -1,4 +1,5 @@
-﻿using System;
+﻿using LibChromeDotNet.CDP.Domains;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -9,6 +10,7 @@ namespace LibChromeDotNet.ChromeInterop
     public interface IDOMNode : IInteropObject
     {
         public string Name { get; }
+        public DOMNodeType NodeType { get; }
         public Task<IJSObject> GetJavascriptNodeAsync();
         public Task<IEnumerable<KeyValuePair<string, string>>> GetAttributesAsync();
         public Task SetAttributeAsync(string attrName, string newValue);

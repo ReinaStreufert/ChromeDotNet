@@ -10,6 +10,8 @@ namespace LibChromeDotNet.CDP.Domains
     public static class Page
     {
         public static ICDPRequest Enable => CDP.Request("Page.enable");
+        public static ICDPRequest Reload => CDP.Request("Page.reload");
+        public static ICDPEvent<double> DOMContentLoaded => CDP.Event("Page.domContentEventFired", paramsJson => (double)paramsJson["timestamp"]!);
 
         public static ICDPRequest Close => CDP.Request("Page.close");
 

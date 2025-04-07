@@ -20,6 +20,7 @@ namespace LibChromeDotNet.ChromeInterop
         }
 
         public string Name => _NodeInfo.Name;
+        public DOMNodeType NodeType => _NodeInfo.NodeType;
         public IInteropSession Session => _Session;
 
         public async Task DeleteNodeAsync()

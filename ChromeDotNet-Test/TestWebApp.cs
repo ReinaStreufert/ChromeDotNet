@@ -1,4 +1,6 @@
-﻿using LibChromeDotNet.HTML5;
+﻿using LibChromeDotNet.CDP.Domains;
+using LibChromeDotNet.ChromeInterop;
+using LibChromeDotNet.HTML5;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -23,6 +25,28 @@ namespace ChromeDotNet_Test
         public async Task OnStartupAsync(IAppContext context)
         {
             var appWindow = await context.OpenWindow();
+            appWindow.PageLoaded += AppWindow_PageLoaded;
+        }
+
+        private async Task AppWindow_PageLoaded(IAppWindow window)
+        {
+            var docBody = await window.GetDocumentBodyAsync();
+            var headingNode = await docBody.QuerySelectAsync("#heading");
+            var headingText = (await headingNode.GetChildrenAsync())
+                .Where(n => n.NodeType == DOMNodeType.Text)
+                .First();
+            _ = CountAsync(headingText);
+        }
+
+        private async Task CountAsync(IDOMNode textNode)
+        {
+            var count = 0;
+            for (; ;)
+            {
+                await Task.Delay(1000);
+                count++;
+                await textNode.SetValueAsync($"test: {count}");
+            }
         }
     }
 }

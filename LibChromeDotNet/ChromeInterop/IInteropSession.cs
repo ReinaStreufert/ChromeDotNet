@@ -11,8 +11,10 @@ namespace LibChromeDotNet.ChromeInterop
     {
         public IInteropSocket Socket { get; }
         public IInteropTarget SessionTarget { get; }
+        public event Action? PageLoaded;
         public Task DetachAsync();
         public Task ClosePageAsync();
+        public Task ReloadPageAsync();
         public Task NavigatePageAsync(string url);
         public Task NavigatePageAsync(Uri url);
         public Task<IDOMNode> GetDOMDocumentAsync();
