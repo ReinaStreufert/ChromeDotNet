@@ -32,11 +32,10 @@ namespace ChromeDotNet_Test
             var headingText = (await headingNode.GetChildrenAsync())
                 .Where(n => n.NodeType == DOMNodeType.Text)
                 .First();
-            var incrementButton = await docBody.QuerySelectAsync("#incrementButton");
-            await incrementButton.AddEventListenerAsync(MouseEvent.Click, async (e) =>
+            var textInput = await docBody.QuerySelectAsync("#textBox");
+            await textInput.AddEventListenerAsync(GenericDOMEvent.Change, async () =>
             {
-                _Counter++;
-                await headingText.SetValueAsync($"Test counter: {_Counter}");
+                await textInput.GetChildrenAsync();
             });
         }
     }

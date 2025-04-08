@@ -5,7 +5,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace LibChromeDotNet.HTML5.JSInterop
+namespace LibChromeDotNet.HTML5.DOM
 {
     public class MouseEvent : IDOMEvent<MouseEventArgs>
     {

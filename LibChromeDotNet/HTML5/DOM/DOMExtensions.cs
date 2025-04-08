@@ -6,7 +6,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace LibChromeDotNet.HTML5.JSInterop
+namespace LibChromeDotNet.HTML5.DOM
 {
     public static class DOMExtensions
     {
@@ -21,7 +21,7 @@ namespace LibChromeDotNet.HTML5.JSInterop
                 callback(eventArg);
             });
             var jsHandlerExpr = $"(function(e){{{jsBindingName}(JSON.stringify(e));}})";
-            using (var jsHandler = (IJSObject)(await session.EvaluateExpressionAsync(jsHandlerExpr)))
+            using (var jsHandler = (IJSObject)await session.EvaluateExpressionAsync(jsHandlerExpr))
             using (var jsNode = await node.GetJavascriptNodeAsync())
             {
                 await jsNode.CallFunctionAsync(
@@ -31,13 +31,13 @@ namespace LibChromeDotNet.HTML5.JSInterop
             }
         }
 
-        public static async Task AddEventListenerAsync<TParams>(this IDOMNode node, GenericDOMEvent eventType, Action callback)
+        public static async Task AddEventListenerAsync(this IDOMNode node, GenericDOMEvent eventType, Action callback)
         {
             var session = node.Session;
             var jsBindingName = Identifier.New();
             await session.AddJSBindingAsync(jsBindingName, (bindingArg) => callback());
             var jsHandlerExpr = $"(function(e){{{jsBindingName}(JSON.stringify(e));}})";
-            using (var jsHandler = (IJSObject)(await session.EvaluateExpressionAsync(jsHandlerExpr)))
+            using (var jsHandler = (IJSObject)await session.EvaluateExpressionAsync(jsHandlerExpr))
             using (var jsNode = await node.GetJavascriptNodeAsync())
             {
                 await jsNode.CallFunctionAsync(
