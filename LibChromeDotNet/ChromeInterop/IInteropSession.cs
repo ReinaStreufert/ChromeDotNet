@@ -20,6 +20,7 @@ namespace LibChromeDotNet.ChromeInterop
         public Task<IDOMNode> GetDOMDocumentAsync();
         public Task<IJSObject> RequireModuleAsync(IJSModule module);
         public Task<IJSValue> EvaluateExpressionAsync(string jsExpression);
+        public Task AddJSBindingAsync(string name, Action<string> callback);
         public Task RequestAsync(ICDPRequest request);
         public Task<TResult> RequestAsync<TResult>(ICDPRequest<TResult> request);
         public void SubscribeEvent<TParams>(ICDPEvent<TParams> targetEvent, Action<TParams> handlerCallback);

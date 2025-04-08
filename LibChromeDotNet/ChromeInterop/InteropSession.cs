@@ -74,6 +74,16 @@ namespace LibChromeDotNet.ChromeInterop
             return new JSObject(this, remoteObject.ObjectId ?? throw new InvalidOperationException("Module script did not return an object"));
         }
 
+        public async Task AddJSBindingAsync(string name, Action<string> callback)
+        {
+            SubscribeEvent(Runtime.BindingCalled, e =>
+            {
+                if (e.BindingName == name)
+                    callback(e.CallParam);
+            });
+            await RequestAsync(Runtime.AddBinding(name));
+        }
+
         public Task RequestAsync(ICDPRequest request) => _CDP.RequestAsync(request, _SessionId);
         public Task<TResult> RequestAsync<TResult>(ICDPRequest<TResult> request) => _CDP.RequestAsync(request, _SessionId);
         public void SubscribeEvent<TParams>(ICDPEvent<TParams> targetEvent, Action<TParams> handlerCallback) => _CDP.SubscribeEvent(targetEvent, handlerCallback, _SessionId);

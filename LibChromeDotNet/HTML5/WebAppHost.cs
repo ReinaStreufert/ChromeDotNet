@@ -85,10 +85,15 @@ namespace LibChromeDotNet.HTML5
                 _Host = host;
             }
 
-            public async Task<IAppWindow> OpenWindow(string contentPath = "/")
+            public async Task<IAppWindow> OpenWindowAsync(string contentPath = "/")
             {
                 var session = await _Host.CreateNewSession(_Host._ContentHost.GetContentUri(contentPath));
-                await session.ReloadPageAsync();
+                var loadTaskSource = new TaskCompletionSource();
+                session.PageLoaded += loadTaskSource.SetResult;
+                var readyState = (await session.EvaluateExpressionAsync("document.readyState")).ToString();
+                if (readyState == "loading")
+                    await loadTaskSource.Task;
+                session.PageLoaded -= loadTaskSource.SetResult;
                 return new AppWindow(_Host, session);
             }
         }
@@ -102,10 +107,7 @@ namespace LibChromeDotNet.HTML5
             {
                 _Host = host;
                 _Session = session;
-                session.PageLoaded += () => PageLoaded?.Invoke(this);
             }
-
-            public event AsyncWindowEvent? PageLoaded;
 
             public async Task CloseAsync()
             {

@@ -1,6 +1,7 @@
 ﻿using LibChromeDotNet.CDP.Domains;
 using LibChromeDotNet.ChromeInterop;
 using LibChromeDotNet.HTML5;
+using LibChromeDotNet.HTML5.JSInterop;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -21,32 +22,22 @@ namespace ChromeDotNet_Test
         }
 
         private WebContent _Content = new WebContent();
+        private int _Counter = 0;
 
         public async Task OnStartupAsync(IAppContext context)
         {
-            var appWindow = await context.OpenWindow();
-            appWindow.PageLoaded += AppWindow_PageLoaded;
-        }
-
-        private async Task AppWindow_PageLoaded(IAppWindow window)
-        {
+            var window = await context.OpenWindowAsync();
             var docBody = await window.GetDocumentBodyAsync();
             var headingNode = await docBody.QuerySelectAsync("#heading");
             var headingText = (await headingNode.GetChildrenAsync())
                 .Where(n => n.NodeType == DOMNodeType.Text)
                 .First();
-            _ = CountAsync(headingText);
-        }
-
-        private async Task CountAsync(IDOMNode textNode)
-        {
-            var count = 0;
-            for (; ;)
+            var incrementButton = await docBody.QuerySelectAsync("#incrementButton");
+            await incrementButton.AddEventListenerAsync(MouseEvent.Click, async (e) =>
             {
-                await Task.Delay(1000);
-                count++;
-                await textNode.SetValueAsync($"test: {count}");
-            }
+                _Counter++;
+                await headingText.SetValueAsync($"Test counter: {_Counter}");
+            });
         }
     }
 }

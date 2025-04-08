@@ -11,6 +11,16 @@ namespace LibChromeDotNet.CDP.Domains
     public static class Runtime
     {
         public static ICDPRequest Enable => CDP.Request("Runtime.enable");
+        public static ICDPEvent<BindingCalledEvent> BindingCalled => CDP.Event("Runtime.bindingCalled", jsonParams => new BindingCalledEvent(jsonParams));
+
+        public static ICDPRequest ReleaseObject(string objectId)
+        {
+            var jsonParams = new JObject()
+            {
+                { "objectId", objectId }
+            };
+            return CDP.Request("Runtime.releaseObject", jsonParams);
+        }
 
         public static ICDPRequest AddBinding(string name, string? executionContextName = null)
         {
@@ -69,8 +79,21 @@ namespace LibChromeDotNet.CDP.Domains
                     callArgumentJson.Add("objectId", obj.ObjectId);
                 else if (obj.Value != null)
                     callArgumentJson.Add("value", obj.Value);
+                jsonArray.Add(callArgumentJson);
             }
             return jsonArray;
+        }
+    }
+
+    public struct BindingCalledEvent
+    {
+        public string BindingName;
+        public string CallParam;
+
+        public BindingCalledEvent(JObject json)
+        {
+            BindingName = json["name"]!.ToString();
+            CallParam = json["payload"]!.ToString();
         }
     }
 

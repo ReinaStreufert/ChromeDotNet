@@ -1,4 +1,5 @@
 ﻿using LibChromeDotNet.CDP.Domains;
+using Newtonsoft.Json.Linq;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -24,6 +25,24 @@ namespace LibChromeDotNet.ChromeInterop
                 _ => new JSValue(session, remoteObject)
             };
         }
+
+        public static IJSValue FromString(IInteropSession session, string text)
+        {
+            return new JSValue(session, new RemoteObject()
+            {
+                Type = JSType.String,
+                Value = new JValue(text)
+            });
+        }
+
+        public static IJSValue FromNumber(IInteropSession session, double value)
+        {
+            return new JSValue(session, new RemoteObject()
+            {
+                Type = JSType.Number,
+                Value = new JValue(value)
+            });
+        }
     }
 
     public interface IJSValue<TVal> : IJSValue
@@ -35,7 +54,7 @@ namespace LibChromeDotNet.ChromeInterop
     public interface IJSNumber : IJSValue<double> { }
     public interface IJSBoolean : IJSValue<bool> { }
 
-    public interface IJSObject : IJSValue
+    public interface IJSObject : IJSValue, IDisposable
     {
         public Task<IJSValue> CallFunctionAsync(string name, params IJSValue[] arguments);
     }

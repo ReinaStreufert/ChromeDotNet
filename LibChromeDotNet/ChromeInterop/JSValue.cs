@@ -34,6 +34,11 @@ namespace LibChromeDotNet.ChromeInterop
                 Value = _SerializedValue
             };
         }
+
+        public override string ToString()
+        {
+            return Value.ToString();
+        }
     }
 
     public class JSValue : IJSValue

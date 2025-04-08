@@ -35,5 +35,10 @@ namespace LibChromeDotNet.ChromeInterop
             var remoteObject = await _Session.RequestAsync(Runtime.CallFunctionOn(_ObjectId, name, arguments.Select(a => a.AsRemoteObject())));
             return IJSValue.FromRemoteObject(_Session, remoteObject);
         }
+
+        public async void Dispose()
+        {
+            await _Session.RequestAsync(Runtime.ReleaseObject(_ObjectId)); // for javascript's garbage collector
+        }
     }
 }
