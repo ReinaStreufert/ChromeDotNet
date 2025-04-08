@@ -9,10 +9,12 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <None Remove="webSources\examplefavicon.png" />
     <None Remove="webSources\index.html" />
   </ItemGroup>
 
   <ItemGroup>
+    <EmbeddedResource Include="webSources\examplefavicon.png" />
     <EmbeddedResource Include="webSources\index.html" />
   </ItemGroup>
 

@@ -12,4 +12,9 @@ namespace LibChromeDotNet.HTML5.JSInterop
         string EventTypeName { get; }
         TParams GetParamsFromJson(JObject eventListenerArgs);
     }
+
+    public enum GenericDOMEvent
+    {
+        Change
+    }
 }
