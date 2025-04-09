@@ -25,22 +25,26 @@ namespace LibChromeDotNet.HTML5.DOM
     public struct KeyboardEventArgs
     {
         public ModifierKeys Modifiers;
-        public string Key;
-        public string Code;
-        public bool Repeat;
+        public string? Key;
+        public string? Code;
+        public bool? Repeat;
 
         public KeyboardEventArgs(JObject eventJson)
         {
-            Modifiers = ModifierKeys.None;
-            if ((bool)eventJson["altKey"]!)
-                Modifiers |= ModifierKeys.AltKey;
-            if ((bool)eventJson["ctrlKey"]!)
-                Modifiers |= ModifierKeys.CtrlKey;
-            if ((bool)eventJson["metaKey"]!)
-                Modifiers |= ModifierKeys.MetaKey;
-            Key = eventJson["key"]!.ToString();
-            Code = eventJson["code"]!.ToString();
-            Repeat = (bool)eventJson["repeat"]!;
+            if (eventJson.ContainsKey("key"))
+            {
+                // something is wack but im ignoring it for now bc i dont need any of these event arguments yet.
+                Modifiers = ModifierKeys.None;
+                if ((bool)eventJson["altKey"]!)
+                    Modifiers |= ModifierKeys.AltKey;
+                if ((bool)eventJson["ctrlKey"]!)
+                    Modifiers |= ModifierKeys.CtrlKey;
+                if ((bool)eventJson["metaKey"]!)
+                    Modifiers |= ModifierKeys.MetaKey;
+                Key = eventJson["key"]!.ToString();
+                Code = eventJson["code"]!.ToString();
+                Repeat = (bool)eventJson["repeat"]!;
+            }
         }
     }
 
