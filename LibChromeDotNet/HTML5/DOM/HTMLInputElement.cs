@@ -25,7 +25,7 @@ namespace LibChromeDotNet.HTML5.DOM
             result._ValueGetter = valueGetter;
             result._ValueSetter = valueSetter;
             result._Value = initialValue;
-            result._ChangeEventListener = await node.AddEventListenerAsync(GenericDOMEvent.Change, () => _ = result.OnValueChangedAsync());
+            result._ChangeEventListener = await node.AddEventListenerAsync(KeyboardEvent.KeyDown, e => _ = result.OnValueChangedAsync(e));
             return result;
         }
 
@@ -48,13 +48,17 @@ namespace LibChromeDotNet.HTML5.DOM
 
         public async Task SetValueAsync(string value) => await _ValueSetter.SetValueAsync(IJSValue.FromString(value));
 
-        private async Task OnValueChangedAsync()
+        private async Task OnValueChangedAsync(KeyboardEventArgs e)
         {
             await using (var jsNode = await _Node.GetJavascriptNodeAsync())
             {
+                var oldValue = _Value;
                 var newValue = (await _ValueGetter.GetValueAsync()).ToString()!;
-                Interlocked.Exchange(ref _Value, newValue);
-                ValueChanged?.Invoke();
+                if (oldValue != newValue)
+                {
+                    Interlocked.Exchange(ref _Value, newValue);
+                    ValueChanged?.Invoke();
+                }
             }
         }
 
