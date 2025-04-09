@@ -10,20 +10,17 @@ namespace LibChromeDotNet.ChromeInterop
 {
     public class JSValue<T> : IJSValue<T>
     {
-        private IInteropSession _Session;
         private JValue _SerializedValue;
         private JSType _Type;
 
-        public JSValue(IInteropSession session, JValue serializedValue, JSType type)
+        public JSValue(JValue serializedValue, JSType type)
         {
             _SerializedValue = serializedValue;
-            _Session = session;
             _Type = type;
         }
 
         public T Value => _SerializedValue.Value<T>()!;
         public JSType Type { get; }
-        public IInteropSession Session => _Session;
 
         public RemoteObject AsRemoteObject()
         {
@@ -43,17 +40,15 @@ namespace LibChromeDotNet.ChromeInterop
 
     public class JSValue : IJSValue
     {
-        private IInteropSession _Session;
         private RemoteObject _RemoteObject;
 
-        public JSValue(IInteropSession session, RemoteObject remoteObject)
+        public JSValue(RemoteObject remoteObject)
         {
             _Session = session;
             _RemoteObject = remoteObject;
         }
 
         public JSType Type => _RemoteObject.Type;
-        public IInteropSession Session => _Session;
 
         public RemoteObject AsRemoteObject() => _RemoteObject;
     }

@@ -22,9 +22,13 @@ namespace LibChromeDotNet.ChromeInterop
             };
         }
 
-        public Task<IJSValue> CallAsync(params IJSObject[] arguments)
+        public async Task<IJSValue> CallAsync(params IJSValue[] arguments)
         {
-            throw new NotImplementedException();
+            var prependedArgs = new IJSValue[arguments.Length + 1];
+            prependedArgs[0] = IJSValue.Undefined;
+            for (int i = 0; i < arguments.Length; i++)
+                prependedArgs[i + 1] = arguments[i];
+            return await CallFunctionAsync("call", prependedArgs);
         }
     }
 }

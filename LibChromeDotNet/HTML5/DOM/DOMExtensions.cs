@@ -25,7 +25,7 @@ namespace LibChromeDotNet.HTML5.DOM
             var jsNode = await node.GetJavascriptNodeAsync();
             await jsNode.CallFunctionAsync(
                 "addEventListener",
-                IJSValue.FromString(session, eventType.EventTypeName),
+                IJSValue.FromString(eventType.EventTypeName),
                 jsHandler);
             return new EventListener(jsNode, jsHandler, eventType.EventTypeName);
         }
@@ -41,7 +41,7 @@ namespace LibChromeDotNet.HTML5.DOM
             var eventTypeName = eventType.ToString().ToLowerInvariant();
             await jsNode.CallFunctionAsync(
                 "addEventListener",
-                IJSValue.FromString(session, eventTypeName),
+                IJSValue.FromString(eventTypeName),
                 jsHandler);
             return new EventListener(jsNode, jsHandler, eventTypeName);
         }
@@ -103,7 +103,7 @@ namespace LibChromeDotNet.HTML5.DOM
             {
                 await _JSNode.CallFunctionAsync(
                     "removeEventListener",
-                    IJSValue.FromString(_JSNode.Session, _EventTypeName),
+                    IJSValue.FromString(_EventTypeName),
                     _JSHandler);
                 await _JSNode.DisposeAsync();
                 await _JSHandler.DisposeAsync();

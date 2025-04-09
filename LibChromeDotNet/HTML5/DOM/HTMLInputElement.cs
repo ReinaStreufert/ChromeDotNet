@@ -12,13 +12,18 @@ namespace LibChromeDotNet.HTML5.DOM
         public static async Task<HTMLInputElement> FromDOMNodeAsync(IDOMNode node)
         {
             var session = node.Session;
-            var module = await session.RequireModuleAsync(ManifestJSModule.FromScriptName("htmlInputElement.js"));
-            string initialValue;
+            IJSGetter valueGetter;
+            IJSSetter valueSetter;
             await using (var jsNode = await node.GetJavascriptNodeAsync())
-                initialValue = (await module.CallFunctionAsync("getValue", jsNode)).ToString()!;
+            {
+                valueGetter = await jsNode.BindGetterAsync("value");
+                valueSetter = await jsNode.BindSetterAsync("value");
+            }
+            string initialValue = (await valueGetter.GetValueAsync()).ToString()!;
             var result = new HTMLInputElement();
             result._Node = node;
-            result._InputModule = module;
+            result._ValueGetter = valueGetter;
+            result._ValueSetter = valueSetter;
             result._Value = initialValue;
             result._ChangeEventListener = await node.AddEventListenerAsync(GenericDOMEvent.Change, () => _ = result.OnValueChangedAsync());
             return result;
@@ -35,28 +40,19 @@ namespace LibChromeDotNet.HTML5.DOM
 
         private HTMLInputElement() { }
 
-        private IJSObject _InputModule;
         private IDOMNode _Node;
         private IAsyncDisposable _ChangeEventListener;
+        private IJSGetter _ValueGetter;
+        private IJSSetter _ValueSetter;
         private string _Value;
 
-        public async Task SetValueAsync(string value)
-        {
-            // _Value is always updated by the event listener
-            await using (var jsNode = await _Node.GetJavascriptNodeAsync())
-            {
-                await _InputModule.CallFunctionAsync(
-                    "setValue",
-                    jsNode,
-                    IJSValue.FromString(_InputModule.Session, value));
-            }
-        }
+        public async Task SetValueAsync(string value) => await _ValueSetter.SetValueAsync(IJSValue.FromString(value));
 
         private async Task OnValueChangedAsync()
         {
             await using (var jsNode = await _Node.GetJavascriptNodeAsync())
             {
-                var newValue = (await _InputModule.CallFunctionAsync("getValue", jsNode)).ToString();
+                var newValue = (await _ValueGetter.GetValueAsync()).ToString()!;
                 Interlocked.Exchange(ref _Value, newValue);
                 ValueChanged?.Invoke();
             }
@@ -65,6 +61,8 @@ namespace LibChromeDotNet.HTML5.DOM
         public async ValueTask DisposeAsync()
         {
             await _ChangeEventListener.DisposeAsync();
+            await _ValueGetter.DisposeAsync();
+            await _ValueSetter.DisposeAsync();
         }
     }
 }
