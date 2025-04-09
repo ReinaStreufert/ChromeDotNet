@@ -36,7 +36,7 @@ namespace LibChromeDotNet.ChromeInterop
             return IJSValue.FromRemoteObject(_Session, remoteObject);
         }
 
-        public async void Dispose()
+        public async ValueTask DisposeAsync()
         {
             await _Session.RequestAsync(Runtime.ReleaseObject(_ObjectId)); // for javascript's garbage collector
         }

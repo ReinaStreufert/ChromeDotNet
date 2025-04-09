@@ -9,12 +9,9 @@ namespace LibChromeDotNet.ChromeInterop
     // provides an API for anonymous JS scripts to store a persistent recallable result
     // for example, the entire HTML5 namespace of extension methods is implemented
     // using IJSModule ensuring interop scripts are only executed once
-    public interface IJSModule<TKey> where TKey : class
+    public interface IJSModule
     {
-        public TKey Key { get; }
+        public string Name { get; }
         public Task<string> GetScriptSourceAsync();
     }
-
-    public interface IJSModule : IJSModule<object> { }
-    public interface IJSNamedModule : IJSModule<string> { }
 }

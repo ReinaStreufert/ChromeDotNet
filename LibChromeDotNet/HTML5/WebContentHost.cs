@@ -38,7 +38,7 @@ namespace LibChromeDotNet.HTML5
                     break;
                 } catch (HttpListenerException)
                 {
-                    _Listener.Prefixes.Clear();
+                    _Listener = new HttpListener();
                 }
             }
             _ = ServeWebContentAsync(_Listener, _Uuid, webContentSource, _ListenerCancelSource.Token);

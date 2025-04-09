@@ -7,6 +7,14 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <None Remove="HTML5\DOM\jsScripts\htmlInputElement.js" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <EmbeddedResource Include="HTML5\DOM\jsScripts\htmlInputElement.js" />
+  </ItemGroup>
+
+  <ItemGroup>
     <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
   </ItemGroup>
 

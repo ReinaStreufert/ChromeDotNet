@@ -1,7 +1,7 @@
 ﻿using LibChromeDotNet.CDP.Domains;
 using LibChromeDotNet.ChromeInterop;
 using LibChromeDotNet.HTML5;
-using LibChromeDotNet.HTML5.JSInterop;
+using LibChromeDotNet.HTML5.DOM;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -22,20 +22,20 @@ namespace ChromeDotNet_Test
         }
 
         private WebContent _Content = new WebContent();
-        private int _Counter = 0;
 
         public async Task OnStartupAsync(IAppContext context)
         {
             var window = await context.OpenWindowAsync();
             var docBody = await window.GetDocumentBodyAsync();
-            var headingNode = await docBody.QuerySelectAsync("#heading");
-            var headingText = (await headingNode.GetChildrenAsync())
-                .Where(n => n.NodeType == DOMNodeType.Text)
-                .First();
-            var textInput = await docBody.QuerySelectAsync("#textBox");
-            await textInput.AddEventListenerAsync(GenericDOMEvent.Change, async () =>
+            var currentTextHead = await docBody.QuerySelectAsync<HTMLTextElement>("#currentTextHead");
+            var snapshotTextHead = await docBody.QuerySelectAsync<HTMLTextElement>("#snapshotTextHead");
+            var textBox = await docBody.QuerySelectAsync<HTMLInputElement>("#textBox");
+            var snapshotButton = await docBody.QuerySelectAsync("#snapshotButton");
+            textBox.ValueChanged += () => currentTextHead.Text = $"Current text: {textBox.Value}";
+            await snapshotButton.AddEventListenerAsync(MouseEvent.Click, e =>
             {
-                await textInput.GetChildrenAsync();
+                snapshotTextHead.Text = $"Snapshot text: ${textBox.Value}";
+                textBox.Value = string.Empty;
             });
         }
     }

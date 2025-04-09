@@ -54,7 +54,7 @@ namespace LibChromeDotNet.ChromeInterop
     public interface IJSNumber : IJSValue<double> { }
     public interface IJSBoolean : IJSValue<bool> { }
 
-    public interface IJSObject : IJSValue, IDisposable
+    public interface IJSObject : IJSValue, IAsyncDisposable
     {
         public Task<IJSValue> CallFunctionAsync(string name, params IJSValue[] arguments);
     }

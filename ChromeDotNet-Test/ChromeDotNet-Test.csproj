@@ -11,11 +11,13 @@
   <ItemGroup>
     <None Remove="webSources\examplefavicon.png" />
     <None Remove="webSources\index.html" />
+    <None Remove="webSources\styles.css" />
   </ItemGroup>
 
   <ItemGroup>
     <EmbeddedResource Include="webSources\examplefavicon.png" />
     <EmbeddedResource Include="webSources\index.html" />
+    <EmbeddedResource Include="webSources\styles.css" />
   </ItemGroup>
 
   <ItemGroup>

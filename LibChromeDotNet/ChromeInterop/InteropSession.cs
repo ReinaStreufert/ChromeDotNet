@@ -29,7 +29,7 @@ namespace LibChromeDotNet.ChromeInterop
         private IInteropTarget _Target;
         private ICDPSocket _CDP;
         private string _SessionId;
-        private ConcurrentDictionary<object, Task<IJSObject>> _LoadedModules = new ConcurrentDictionary<object, Task<IJSObject>>();
+        private ConcurrentDictionary<string, Task<IJSObject>> _LoadedModules = new ConcurrentDictionary<string, Task<IJSObject>>();
 
         public async Task ClosePageAsync()
         {
@@ -58,7 +58,7 @@ namespace LibChromeDotNet.ChromeInterop
 
         public Task<IJSObject> RequireModuleAsync(IJSModule module)
         {
-            return _LoadedModules.GetOrAdd(module.Key, o => LoadJSModuleAsync(module));
+            return _LoadedModules.GetOrAdd(module.Name, o => LoadJSModuleAsync(module));
         }
 
         public async Task<IJSValue> EvaluateExpressionAsync(string jsExpression)
@@ -70,7 +70,7 @@ namespace LibChromeDotNet.ChromeInterop
         private async Task<IJSObject> LoadJSModuleAsync(IJSModule module)
         {
             var jsSource = await module.GetScriptSourceAsync();
-            var remoteObject = await RequestAsync(Runtime.Evaluate($"(function(){{{jsSource}}})();"));
+            var remoteObject = await RequestAsync(Runtime.Evaluate($"(function() {{{jsSource}{Environment.NewLine}}} )();"));
             return new JSObject(this, remoteObject.ObjectId ?? throw new InvalidOperationException("Module script did not return an object"));
         }
 
