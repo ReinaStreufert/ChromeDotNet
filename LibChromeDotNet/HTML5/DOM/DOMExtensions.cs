@@ -20,7 +20,10 @@ namespace LibChromeDotNet.HTML5.DOM
                 var eventArg = eventType.GetParamsFromJson(eventArgJson);
                 callback(eventArg);
             });
-            var jsHandlerExpr = $"(function(e){{{jsBindingName}(JSON.stringify(e));}})";
+            var serializableLiteralProps = eventType.SerializedProperties
+                .Select(propName => $"{propName}: e.{propName}");
+            var serializableEventExpr = $"{{{string.Join(',', serializableLiteralProps)}}}";
+            var jsHandlerExpr = $"(function(e){{{jsBindingName}(JSON.stringify({serializableEventExpr}));}})";
             var jsHandler = (IJSObject)await session.EvaluateExpressionAsync(jsHandlerExpr);
             var jsNode = await node.GetJavascriptNodeAsync();
             await jsNode.CallFunctionAsync(

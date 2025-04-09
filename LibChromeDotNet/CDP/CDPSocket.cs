@@ -68,7 +68,7 @@ namespace LibChromeDotNet.CDP
             {
                 var msgObject = await ReceiveRawAsync(cancelToken);
                 cancelToken.ThrowIfCancellationRequested();
-                Console.Write($"Message received: {msgObject}");
+                //Console.Write($"Message received: {msgObject}");
                 if (msgObject.ContainsKey("id"))
                 {
                     var msgId = (int)msgObject["id"]!;
@@ -145,7 +145,7 @@ namespace LibChromeDotNet.CDP
                 messageObject.Add("sessionId", sessionId);
             var messageJson = messageObject.ToString();
             var sendBuffer = Encoding.UTF8.GetBytes(messageJson);
-            Console.WriteLine($"Message sent: {messageObject}");
+            //Console.WriteLine($"Message sent: {messageObject}");
             await _WebSocket.SendAsync(sendBuffer, WebSocketMessageType.Text, true, cancelToken);
         }
 

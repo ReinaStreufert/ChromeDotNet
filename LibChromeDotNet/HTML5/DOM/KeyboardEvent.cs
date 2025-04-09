@@ -13,6 +13,15 @@ namespace LibChromeDotNet.HTML5.DOM
         public static KeyboardEvent KeyUp => new KeyboardEvent("keyup");
 
         public string EventTypeName { get; }
+        public IEnumerable<string> SerializedProperties { get; } = new string[]
+        {
+            "altKey",
+            "ctrlKey",
+            "metaKey",
+            "key",
+            "code",
+            "repeat"
+        };
 
         private KeyboardEvent(string name)
         {

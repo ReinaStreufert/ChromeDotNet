@@ -10,6 +10,7 @@ namespace LibChromeDotNet.HTML5.DOM
     public interface IDOMEvent<TParams>
     {
         string EventTypeName { get; }
+        IEnumerable<string> SerializedProperties { get; } // JSON.stringify doesnt understand prototypes, i hate javascript so fuCKing much.
         TParams GetParamsFromJson(JObject eventListenerArgs);
     }
 
