@@ -44,7 +44,6 @@ namespace LibChromeDotNet.ChromeInterop
 
         public JSValue(RemoteObject remoteObject)
         {
-            _Session = session;
             _RemoteObject = remoteObject;
         }
 

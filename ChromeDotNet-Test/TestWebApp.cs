@@ -27,10 +27,10 @@ namespace ChromeDotNet_Test
         {
             var window = await context.OpenWindowAsync();
             var docBody = await window.GetDocumentBodyAsync();
-            var currentTextHead = await docBody.QuerySelectAsync<HTMLTextElement>("#currentTextHead");
-            var snapshotTextHead = await docBody.QuerySelectAsync<HTMLTextElement>("#snapshotTextHead");
-            var textBox = await docBody.QuerySelectAsync<HTMLInputElement>("#textBox");
-            var snapshotButton = await docBody.QuerySelectAsync("#snapshotButton");
+            var currentTextHead = await docBody.QuerySelectAsync<HTMLTextElement>("#current-text-head");
+            var snapshotTextHead = await docBody.QuerySelectAsync<HTMLTextElement>("#snapshot-text-head");
+            var textBox = await docBody.QuerySelectAsync<HTMLInputElement>("#text-box");
+            var snapshotButton = await docBody.QuerySelectAsync("#snapshot-button");
             textBox.ValueChanged += () => currentTextHead.Text = $"Current text: {textBox.Value}";
             await snapshotButton.AddEventListenerAsync(MouseEvent.Click, e =>
             {
