@@ -25,6 +25,11 @@ namespace ChromeDotNet_Test
 
         public async Task OnStartupAsync(IAppContext context)
         {
+            await OpenTestWindowAsync(context);
+        }
+
+        private async Task OpenTestWindowAsync(IAppContext context)
+        {
             var window = await context.OpenWindowAsync();
             var docBody = await window.GetDocumentBodyAsync();
             var currentPosHead = await docBody.QuerySelectAsync<HTMLTextElement>("#current-pos-head");
@@ -38,6 +43,11 @@ namespace ChromeDotNet_Test
             {
                 currentPosHead.Text = $"Your pointer is at: ({e.ClientX},{e.ClientY})";
             });
+
+            var openButton = await docBody.QuerySelectAsync("#open-button");
+            var closeButton = await docBody.QuerySelectAsync("#close-button");
+            await openButton.AddEventListenerAsync(MouseEvent.Click, async (e) => await context.OpenWindowAsync());
+            await closeButton.AddEventListenerAsync(MouseEvent.Click, async (e) => await window.CloseAsync());
         }
     }
 }
