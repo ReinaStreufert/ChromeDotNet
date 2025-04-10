@@ -87,11 +87,15 @@ namespace LibChromeDotNet.HTML5
 
             public async Task<IAppWindow> OpenWindowAsync(string contentPath = "/")
             {
-                var session = await _Host.CreateNewSession(_Host._ContentHost.GetContentUri(contentPath));
+                var contentUri = _Host._ContentHost.GetContentUri(contentPath);
+                var session = await _Host.CreateNewSession(contentUri);
                 var loadTaskSource = new TaskCompletionSource();
                 session.PageLoaded += loadTaskSource.SetResult;
-                var readyState = (await session.EvaluateExpressionAsync("document.readyState")).ToString();
-                if (readyState == "loading")
+                var docReadyExpr = "(function(url) { return document.URL.toLowerCase() == url.toLowerCase() && document.readyState != \"loading\" })";
+                JSValue<bool> docReady;
+                await using (var docReadyFunc = (IJSFunction)await session.EvaluateExpressionAsync(docReadyExpr))
+                    docReady = (JSValue<bool>)await docReadyFunc.CallAsync(IJSValue.FromString(contentUri.ToString()));
+                if (!docReady.Value)
                     await loadTaskSource.Task;
                 session.PageLoaded -= loadTaskSource.SetResult;
                 return new AppWindow(_Host, session);
