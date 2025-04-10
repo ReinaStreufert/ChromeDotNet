@@ -17,7 +17,7 @@ namespace LibChromeDotNet.HTML5
         private Guid _Uuid = Guid.NewGuid();
         private HttpListener _Listener = new HttpListener();
         private Random _Rand = new Random();
-        private CancellationTokenSource _ListenerCancelSource = new CancellationTokenSource();
+        private CancellationTokenSource _CancelSource = new CancellationTokenSource();
 
         public Uri GetContentUri(string contentPath)
         {
@@ -26,7 +26,7 @@ namespace LibChromeDotNet.HTML5
             return new Uri($"http://localhost:{_Port}/{_Uuid}/");
         }
 
-        public void StartHttpListener(IWebContent webContentSource)
+        public async Task ListenAsync(IWebContent webContentSource)
         {
             for (; ;)
             {
@@ -41,14 +41,29 @@ namespace LibChromeDotNet.HTML5
                     _Listener = new HttpListener();
                 }
             }
-            _ = ServeWebContentAsync(_Listener, _Uuid, webContentSource, _ListenerCancelSource.Token);
+            await ServeWebContentAsync(_Listener, _Uuid, webContentSource, _CancelSource.Token);
+        }
+
+        public void Stop()
+        {
+            _CancelSource.Cancel();
+            _Listener.Stop();
         }
 
         private static async Task ServeWebContentAsync(HttpListener listener, Guid uuid, IWebContent webContentSource, CancellationToken cancelToken)
         {
-            while (!cancelToken.IsCancellationRequested)
+            for (; ;)
             {
-                var requestContext = await listener.GetContextAsync();
+                HttpListenerContext requestContext;
+                try
+                {
+                    requestContext = await listener.GetContextAsync();
+                } catch (HttpListenerException e)
+                {
+                    if (cancelToken.IsCancellationRequested)
+                        return;
+                    throw e;
+                }
                 var url = requestContext.Request.Url;
                 if (url == null) // why is Url nullable?
                     continue;
@@ -73,12 +88,6 @@ namespace LibChromeDotNet.HTML5
                 }
                 response.Close();
             }
-        }
-
-        public void StopListening()
-        {
-            _ListenerCancelSource.Cancel();
-            _Listener.Stop();
         }
     }
 }

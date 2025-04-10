@@ -9,5 +9,6 @@ namespace LibChromeDotNet.HTML5
     public interface IAppContext
     {
         public Task<IAppWindow> OpenWindowAsync(string contentPath = "/");
+        public void Exit();
     }
 }

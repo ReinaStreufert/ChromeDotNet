@@ -10,12 +10,15 @@ namespace LibChromeDotNet.ChromeInterop
 {
     public class InteropSocket : IInteropSocket
     {
-        private ICDPSocket _CDP;
+        public event Action? Detached;
 
         public InteropSocket(ICDPSocket cdpSocket)
         {
             _CDP = cdpSocket;
+            cdpSocket.SubscribeEvent(Inspector.Detached, r => Detached?.Invoke());
         }
+
+        private ICDPSocket _CDP;
 
         public void Dispose() => _CDP.Dispose();
         public Task CloseAsync() => _CDP.CloseAsync();

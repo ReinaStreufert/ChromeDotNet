@@ -8,7 +8,6 @@ namespace LibChromeDotNet.HTML5
 {
     public interface IWebAppHost
     {
-        public Task LaunchAsync();
-        public void Close();
+        public Task LaunchAppAsync();
     }
 }

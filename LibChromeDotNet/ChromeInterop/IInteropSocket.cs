@@ -8,6 +8,7 @@ namespace LibChromeDotNet.ChromeInterop
 {
     public interface IInteropSocket : IDisposable
     {
+        public event Action? Detached;
         public Task CloseAsync();
         public Task<IEnumerable<IInteropTarget>> GetTargetsAsync();
         public Task<IInteropTarget> CreateTargetAsync(string url);

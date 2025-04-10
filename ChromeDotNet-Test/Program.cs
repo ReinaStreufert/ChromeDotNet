@@ -7,5 +7,4 @@ using System.Reflection;
 
 var app = new TestWebApp();
 var appHost = WebAppHost.Create(app);
-await appHost.LaunchAsync();
-Console.ReadLine();
+await appHost.LaunchAppAsync();

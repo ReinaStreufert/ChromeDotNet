@@ -8,8 +8,8 @@ namespace LibChromeDotNet.HTML5
 {
     public interface IWebContentHost
     {
-        public void StartHttpListener(IWebContent webContentSource);
-        public void StopListening();
+        public Task ListenAsync(IWebContent webContentSource);
+        public void Stop();
         public int LoopbackPort { get; }
         public Guid Uuid { get; }
         public Uri GetContentUri(string contentPath);
