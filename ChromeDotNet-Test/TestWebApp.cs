@@ -46,7 +46,7 @@ namespace ChromeDotNet_Test
 
             var openButton = await docBody.QuerySelectAsync("#open-button");
             var closeButton = await docBody.QuerySelectAsync("#close-button");
-            await openButton.AddEventListenerAsync(MouseEvent.Click, async (e) => await context.OpenWindowAsync());
+            await openButton.AddEventListenerAsync(MouseEvent.Click, async (e) => await OpenTestWindowAsync(context));
             await closeButton.AddEventListenerAsync(MouseEvent.Click, async (e) => await window.CloseAsync());
         }
     }
