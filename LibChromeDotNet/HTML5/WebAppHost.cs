@@ -133,7 +133,6 @@ namespace LibChromeDotNet.HTML5
                 var cdp = new CDPSocket();
                 await cdp.ConnectAsync(browser.CDPTarget, CancellationToken.None);
                 var sock = new InteropSocket(cdp);
-                sock.Detached += _Host._ContentHost.Stop;
                 var rootTarget = (await sock.GetTargetsAsync())
                     .Where(t => t.Type == DebugTargetType.Page && t.NavigationUri == initialUrl)
                     .First();
@@ -162,7 +161,6 @@ namespace LibChromeDotNet.HTML5
             public async Task CloseAsync()
             {
                 await _Session.ClosePageAsync();
-                await _Session.DetachAsync();
                 _ContentProvider.Dispose();
             }
 

@@ -10,12 +10,9 @@ namespace LibChromeDotNet.ChromeInterop
 {
     public class InteropSocket : IInteropSocket
     {
-        public event Action? Detached;
-
         public InteropSocket(ICDPSocket cdpSocket)
         {
             _CDP = cdpSocket;
-            cdpSocket.SubscribeEvent(Inspector.Detached, r => Detached?.Invoke());
         }
 
         private ICDPSocket _CDP;

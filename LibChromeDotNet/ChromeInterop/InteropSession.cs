@@ -58,7 +58,7 @@ namespace LibChromeDotNet.ChromeInterop
 
         public async Task DetachAsync()
         {
-            await _CDP.RequestAsync(Target.DetachFromTarget(_SessionId));
+            await RequestAsync(Target.DetachFromTarget(_SessionId));
         }
 
         public async Task<IDOMNode> GetDOMDocumentAsync()
