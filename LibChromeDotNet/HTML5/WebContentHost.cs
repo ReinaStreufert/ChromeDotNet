@@ -127,7 +127,7 @@ namespace LibChromeDotNet.HTML5
 
             public void Dispose()
             {
-                _Host._ContentProviderDict.TryRemove(_Uuid);
+                _Host._ContentProviderDict.TryRemove(_Uuid, out _);
             }
         }
     }
