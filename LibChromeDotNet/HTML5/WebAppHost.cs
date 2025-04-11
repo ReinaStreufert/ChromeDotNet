@@ -11,6 +11,7 @@ using System.Threading.Tasks;
 
 namespace LibChromeDotNet.HTML5
 {
+    // todo: rewrite this whole goddamn fucking class and interfaces because i wouldnt have done it the same way if i saw the future
     public class WebAppHost : IWebAppHost
     {
         public static IWebAppHost Create(IWebApp app) => new WebAppHost(ChromeLauncher.CreateForPlatform(), app);
