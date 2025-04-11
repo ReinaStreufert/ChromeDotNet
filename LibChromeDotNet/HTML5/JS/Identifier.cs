@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace LibChromeDotNet.HTML5.DOM
+namespace LibChromeDotNet.HTML5.JS
 {
     public static class Identifier
     {

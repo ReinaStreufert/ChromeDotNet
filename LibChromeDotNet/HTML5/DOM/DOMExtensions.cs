@@ -1,4 +1,5 @@
 ﻿using LibChromeDotNet.ChromeInterop;
+using LibChromeDotNet.HTML5.JS;
 using Newtonsoft.Json.Linq;
 using System;
 using System.Collections.Generic;
@@ -10,6 +11,7 @@ namespace LibChromeDotNet.HTML5.DOM
 {
     public static class DOMExtensions
     {
+        // todo: rewrite this with the good but still kinda bad AddJSBindingAsync from HTML5.JS
         public static async Task<IAsyncDisposable> AddEventListenerAsync<TParams>(this IDOMNode node, IDOMEvent<TParams> eventType, Action<TParams> callback)
         {
             var session = node.Session;

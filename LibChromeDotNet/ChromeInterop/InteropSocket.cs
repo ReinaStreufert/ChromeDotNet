@@ -46,5 +46,10 @@ namespace LibChromeDotNet.ChromeInterop
             _ = session.RequestAsync(Runtime.Enable);
             return session;
         }
+
+        public async Task ActivateTargetAsync(IInteropTarget target)
+        {
+            await _CDP.RequestAsync(Target.ActivateTarget(target.Id));
+        }
     }
 }

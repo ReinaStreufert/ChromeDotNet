@@ -1,6 +1,8 @@
 ﻿using LibChromeDotNet.CDP;
 using LibChromeDotNet.ChromeApplication;
 using LibChromeDotNet.ChromeInterop;
+using LibChromeDotNet.HTML5.JS;
+using Newtonsoft.Json.Linq;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -39,9 +41,11 @@ namespace LibChromeDotNet.HTML5
             }
 
             private WebAppHost _Host;
-            private List<IAppWindow> _OpenWindows = new List<IAppWindow>();
+            private List<AppWindow> _OpenWindows = new List<AppWindow>();
+            private IInteropSession? _FocusedSession;
+
             private object _Sync = new object();
-            private bool _ExitLock = false;
+            private bool _IsExited = false;
             private Task<IInteropSession>? _InitTask;
             private object _InitLock = new object();
 
@@ -49,7 +53,7 @@ namespace LibChromeDotNet.HTML5
             {
                 lock (_Sync)
                 {
-                    if (_ExitLock)
+                    if (_IsExited)
                         ThrowExited();
                 }
                 var contentProvider = _Host._ContentHost.CreateContentProvider();
@@ -67,12 +71,20 @@ namespace LibChromeDotNet.HTML5
                 var result = new AppWindow(_Host, session, contentProvider);
                 lock (_Sync)
                 {
-                    if (_ExitLock)
+                    if (_IsExited)
                     {
                         _ = result.CloseAsync();
                         ThrowExited();
                     }
                     _OpenWindows.Add(result);
+                }
+                Interlocked.Exchange(ref _FocusedSession, session);
+                await using (var windowEventListener = (IJSFunction)await session.EvaluateExpressionAsync("window.addEventListener"))
+                await using (var jsCallback = await session.AddJSBindingAsync((JObject o) => Interlocked.Exchange(ref _FocusedSession, session)))
+                {
+                    await windowEventListener.CallAsync(
+                        IJSValue.FromString("focus"),
+                        jsCallback);
                 }
                 return result;
             }
@@ -83,7 +95,7 @@ namespace LibChromeDotNet.HTML5
                 {
                     foreach (var window in _OpenWindows)
                         _ = window.CloseAsync();
-                    _ExitLock = true;
+                    _IsExited = true;
                 }
                 _Host._ContentHost.Stop();
             }
@@ -101,13 +113,14 @@ namespace LibChromeDotNet.HTML5
                         _InitTask = InitializeChromeAsync(url);
                     }
                 }
-                var rootSession = await _InitTask;
                 if (isRootWindow)
-                    return rootSession;
-                var jsWindowOpenExpr = "(function(url){ window.open(url, null, \"popup=true\"); })";
-                await using (var jsWindowOpenFunc = (IJSFunction)await rootSession.EvaluateExpressionAsync(jsWindowOpenExpr))
-                    await jsWindowOpenFunc.CallAsync(IJSValue.FromString(url.ToString()));
-                var socket = rootSession.Socket;
+                    return await _InitTask;
+                IInteropSession focused;
+                focused = _FocusedSession ?? await _InitTask;
+                var socket = focused.Socket;
+                var jsWindowOpenExpr = "(function(url,name){ window.open(url, name, \"popup=true,noopener=true,noreferrer=true\"); })"; // random popup names ensure a new window is always generated.
+                await using (var jsWindowOpenFunc = (IJSFunction)await focused.EvaluateExpressionAsync(jsWindowOpenExpr))
+                    await jsWindowOpenFunc.CallAsync(IJSValue.FromString(url.ToString()), IJSValue.FromString(Identifier.New()));
                 var newTarget = (await socket.GetTargetsAsync())
                     .Where(t => t.Type == DebugTargetType.Page && t.NavigationUri == url)
                     .First();

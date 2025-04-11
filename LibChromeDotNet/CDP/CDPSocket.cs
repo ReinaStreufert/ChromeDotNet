@@ -67,7 +67,7 @@ namespace LibChromeDotNet.CDP
             {
                 var msgObject = await ReceiveRawAsync(cancelToken);
                 cancelToken.ThrowIfCancellationRequested();
-                //Console.Write($"Message received: {msgObject}");
+                Console.Write($"Message received: {msgObject}");
                 if (msgObject.ContainsKey("id"))
                 {
                     var msgId = (int)msgObject["id"]!;
