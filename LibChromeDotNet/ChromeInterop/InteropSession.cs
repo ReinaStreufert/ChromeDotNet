@@ -15,6 +15,7 @@ namespace LibChromeDotNet.ChromeInterop
         public IInteropSocket Socket => _InteropSocket;
         public IInteropTarget SessionTarget => _Target;
         public event Action? PageLoaded;
+        public event Action? Detached;
 
         public InteropSession(IInteropSocket interopSocket, IInteropTarget target, ICDPSocket cdpSocket, string sessionId)
         {
@@ -22,18 +23,28 @@ namespace LibChromeDotNet.ChromeInterop
             _Target = target;
             _CDP = cdpSocket;
             _SessionId = sessionId;
-            SubscribeEvent(Page.DOMContentLoaded, t => PageLoaded?.Invoke());
+            _Subscriptions.Add(SubscribeEvent(Page.DOMContentLoaded, t => PageLoaded?.Invoke()));
+            _Subscriptions.Add(_CDP.SubscribeEvent(Target.DetachedFromTarget, s =>
+            {
+                if (s == _SessionId)
+                {
+                    FreeSession();
+                    Detached?.Invoke();
+                }
+            }));
         }
 
         private IInteropSocket _InteropSocket;
         private IInteropTarget _Target;
         private ICDPSocket _CDP;
+        private List<ICDPSubscription> _Subscriptions = new List<ICDPSubscription>();
         private string _SessionId;
         private ConcurrentDictionary<string, Task<IJSObject>> _LoadedModules = new ConcurrentDictionary<string, Task<IJSObject>>();
 
         public async Task ClosePageAsync()
         {
             await RequestAsync(Page.Close);
+            FreeSession();
         }
 
         public async Task ReloadPageAsync() => await RequestAsync(Page.Reload);
@@ -86,6 +97,12 @@ namespace LibChromeDotNet.ChromeInterop
 
         public Task RequestAsync(ICDPRequest request) => _CDP.RequestAsync(request, _SessionId);
         public Task<TResult> RequestAsync<TResult>(ICDPRequest<TResult> request) => _CDP.RequestAsync(request, _SessionId);
-        public void SubscribeEvent<TParams>(ICDPEvent<TParams> targetEvent, Action<TParams> handlerCallback) => _CDP.SubscribeEvent(targetEvent, handlerCallback, _SessionId);
+        public ICDPSubscription SubscribeEvent<TParams>(ICDPEvent<TParams> targetEvent, Action<TParams> handlerCallback) => _CDP.SubscribeEvent(targetEvent, handlerCallback, _SessionId);
+    
+        private void FreeSession()
+        {
+            foreach (var subscription in _Subscriptions)
+                subscription.Unsubscribe();
+        }
     }
 }

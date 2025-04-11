@@ -10,6 +10,8 @@ namespace LibChromeDotNet.CDP.Domains
 {
     public static class Target
     {
+        public static ICDPEvent<string> DetachedFromTarget => CDP.Event("Target.detachedFromTarget", json => json["sessionId"]!.ToString());
+
         public static ICDPRequest<IEnumerable<TargetInfo>> GetTargets(string? filter = null)
         {
             var paramsJson = new JObject();

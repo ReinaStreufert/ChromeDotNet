@@ -9,9 +9,10 @@ namespace LibChromeDotNet.ChromeInterop
 {
     public interface IInteropSession
     {
+        public event Action? PageLoaded;
+        public event Action? Detached;
         public IInteropSocket Socket { get; }
         public IInteropTarget SessionTarget { get; }
-        public event Action? PageLoaded;
         public Task DetachAsync();
         public Task ClosePageAsync();
         public Task ReloadPageAsync();
@@ -23,7 +24,7 @@ namespace LibChromeDotNet.ChromeInterop
         public Task AddJSBindingAsync(string name, Action<string> callback);
         public Task RequestAsync(ICDPRequest request);
         public Task<TResult> RequestAsync<TResult>(ICDPRequest<TResult> request);
-        public void SubscribeEvent<TParams>(ICDPEvent<TParams> targetEvent, Action<TParams> handlerCallback);
+        public ICDPSubscription SubscribeEvent<TParams>(ICDPEvent<TParams> targetEvent, Action<TParams> handlerCallback);
     }
 
     public interface IInteropObject

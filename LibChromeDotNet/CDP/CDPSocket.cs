@@ -54,12 +54,11 @@ namespace LibChromeDotNet.CDP
             return message.GetResultFromJson(resultObject);
         }
 
-        public void SubscribeEvent<TEventParams>(ICDPEvent<TEventParams> targetEvent, Action<TEventParams> handlerCallback, string? sessionId)
+        public ICDPSubscription SubscribeEvent<TEventParams>(ICDPEvent<TEventParams> targetEvent, Action<TEventParams> handlerCallback, string? sessionId)
         {
-            _EventSubscriptions.Acquire(subsriptions =>
-            {
-                subsriptions.Add(new EventSubscription<TEventParams>(targetEvent, sessionId, handlerCallback));
-            });
+            var subscription = new EventSubscription<TEventParams>(this, targetEvent, sessionId, handlerCallback);
+            _EventSubscriptions.Acquire(subsriptions => subsriptions.Add(subscription));
+            return subscription;
         }
 
         private async Task ListenAsync(CancellationToken cancelToken)
@@ -199,7 +198,7 @@ namespace LibChromeDotNet.CDP
             }
         }
 
-        private interface IEventSubscription
+        private interface IEventSubscription : ICDPSubscription
         {
             string MethodName { get; }
             string? SessionId { get; }
@@ -213,16 +212,24 @@ namespace LibChromeDotNet.CDP
             public string? SessionId { get; }
             public string MethodName => Event.MethodName;
 
-            public EventSubscription(ICDPEvent<TParams> subscribedEvent, string? sessionId, Action<TParams> callback)
+            public EventSubscription(CDPSocket socket, ICDPEvent<TParams> subscribedEvent, string? sessionId, Action<TParams> callback)
             {
+                _Socket = socket;
                 Event = subscribedEvent;
                 SessionId = sessionId;
                 Callback = callback;
             }
 
+            private CDPSocket _Socket;
+
             public void Handle(JObject jsonParams)
             {
                 Event.Handle(jsonParams, Callback);
+            }
+
+            public void Unsubscribe()
+            {
+                _Socket._EventSubscriptions.Acquire(subscriptions => subscriptions.Remove(this));
             }
         }
     }

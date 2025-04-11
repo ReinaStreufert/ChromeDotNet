@@ -79,13 +79,13 @@ namespace LibChromeDotNet.HTML5
 
             public void Exit()
             {
-                _Host._ContentHost.Stop();
                 lock (_Sync)
                 {
                     foreach (var window in _OpenWindows)
                         _ = window.CloseAsync();
                     _ExitLock = true;
                 }
+                _Host._ContentHost.Stop();
             }
 
             private void ThrowExited() => throw new InvalidOperationException("The context is invalid because the app has exited");
@@ -104,7 +104,7 @@ namespace LibChromeDotNet.HTML5
                 var rootSession = await _InitTask;
                 if (isRootWindow)
                     return rootSession;
-                var jsWindowOpenExpr = "(function(url){ window.open(url, null, {newWindow: true}); })";
+                var jsWindowOpenExpr = "(function(url){ window.open(url, null, \"popup=true\"); })";
                 await using (var jsWindowOpenFunc = (IJSFunction)await rootSession.EvaluateExpressionAsync(jsWindowOpenExpr))
                     await jsWindowOpenFunc.CallAsync(IJSValue.FromString(url.ToString()));
                 var socket = rootSession.Socket;
@@ -124,7 +124,9 @@ namespace LibChromeDotNet.HTML5
                 var rootTarget = (await sock.GetTargetsAsync())
                     .Where(t => t.Type == DebugTargetType.Page && t.NavigationUri == initialUrl)
                     .First();
-                return await sock.OpenSessionAsync(rootTarget);
+                var rootSession = await sock.OpenSessionAsync(rootTarget);
+                rootSession.Detached += Exit; // the first launched window acts as the root window for the application, the whole app dies with it.
+                return rootSession;
             }
         }
 
@@ -139,7 +141,10 @@ namespace LibChromeDotNet.HTML5
                 _Host = host;
                 _Session = session;
                 _ContentProvider = contentProvider;
+                session.Detached += () => ClosedByUser?.Invoke();
             }
+
+            public event Action? ClosedByUser;
 
             public async Task CloseAsync()
             {

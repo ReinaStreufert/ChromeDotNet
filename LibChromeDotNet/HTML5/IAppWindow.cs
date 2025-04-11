@@ -9,10 +9,9 @@ namespace LibChromeDotNet.HTML5
 {
     public interface IAppWindow
     {
+        public event Action? ClosedByUser;
         public Task CloseAsync();
         public Task<IDOMNode> GetDocumentBodyAsync();
         public Task NavigateAsync(string contentPath);
     }
-
-    public delegate Task AsyncWindowEvent(IAppWindow window);
 }
