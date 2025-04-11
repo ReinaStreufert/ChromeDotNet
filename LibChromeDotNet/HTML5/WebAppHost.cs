@@ -90,14 +90,16 @@ namespace LibChromeDotNet.HTML5
                 return result;
             }
 
-            public void Exit()
+            public async Task ExitAsync()
             {
+                List<Task> closeTasks = new List<Task>();
                 lock (_Sync)
                 {
                     foreach (var window in _OpenWindows)
-                        _ = window.CloseAsync();
+                        closeTasks.Add(window.CloseAsync());
                     _IsExited = true;
                 }
+                await Task.WhenAll(closeTasks);
                 _Host._ContentHost.Stop();
             }
 
@@ -138,7 +140,7 @@ namespace LibChromeDotNet.HTML5
                     .Where(t => t.Type == DebugTargetType.Page && t.NavigationUri == initialUrl)
                     .First();
                 var rootSession = await sock.OpenSessionAsync(rootTarget);
-                rootSession.Detached += Exit; // the first launched window acts as the root window for the application, the whole app dies with it.
+                rootSession.Detached += () => _ = ExitAsync(); // the first launched window acts as the root window for the application, the whole app dies with it.
                 return rootSession;
             }
         }
@@ -165,7 +167,7 @@ namespace LibChromeDotNet.HTML5
             {
                 _ContentProvider.Dispose();
                 if (_IsRoot)
-                    _Context.Exit();
+                    await _Context.ExitAsync();
                 else
                     await _Session.ClosePageAsync();
             }
