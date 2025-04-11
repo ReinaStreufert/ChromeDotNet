@@ -5,5 +5,5 @@ using LibChromeDotNet.HTML5;
 using System.Reflection;
 
 var app = new TestWebApp();
-var appHost = WebAppHost.Create(app);
+var appHost = WebCRAppHost.Create(app);
 await appHost.LaunchAppAsync();
