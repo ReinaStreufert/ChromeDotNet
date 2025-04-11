@@ -23,13 +23,15 @@ namespace LibChromeDotNet.CDP.Domains
             });
         }
 
-        public static ICDPRequest<string> CreateTarget(Uri url, bool newWindow = true, int width = 0, int height = 0)
+        public static ICDPRequest<string> CreateTarget(Uri url, string? browserContextId = null, bool newWindow = true, int width = 0, int height = 0)
         {
             var paramsJson = new JObject()
             {
                 { "url", url.ToString() },
                 { "newWindow", newWindow }
             };
+            if (browserContextId != null)
+                paramsJson.Add("browserContextId", browserContextId);
             if (width > 0 && height > 0)
             {
                 paramsJson.Add("width", width);
@@ -76,6 +78,7 @@ namespace LibChromeDotNet.CDP.Domains
     public struct TargetInfo : IInteropTarget
     {
         public string Id;
+        public string BrowserContextId;
         public DebugTargetType Type;
         public string Title;
         public Uri NavigationUri;
@@ -83,6 +86,7 @@ namespace LibChromeDotNet.CDP.Domains
         public TargetInfo(JObject jsonObject)
         {
             Id = jsonObject["targetId"]!.ToString();
+            BrowserContextId = jsonObject["browserContextId"]!.ToString();
             Type = Enum.Parse<DebugTargetType>(jsonObject["type"]!.ToString(), true);
             Title = jsonObject["title"]!.ToString();
             NavigationUri = new Uri(jsonObject["url"]!.ToString());
@@ -92,5 +96,6 @@ namespace LibChromeDotNet.CDP.Domains
         DebugTargetType IInteropTarget.Type => Type;
         string IInteropTarget.Title => Title;
         Uri IInteropTarget.NavigationUri => NavigationUri;
+        string IInteropTarget.BrowserContextId => BrowserContextId;
     }
 }

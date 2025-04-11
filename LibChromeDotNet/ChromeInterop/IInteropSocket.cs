@@ -11,10 +11,6 @@ namespace LibChromeDotNet.ChromeInterop
         public event Action? Detached;
         public Task CloseAsync();
         public Task<IEnumerable<IInteropTarget>> GetTargetsAsync();
-        public Task<IInteropTarget> CreateTargetAsync(string url);
-        public Task<IInteropTarget> CreateTargetAsync(Uri url);
-        public Task<IInteropTarget> CreateTargetAsync(string url, int width, int height);
-        public Task<IInteropTarget> CreateTargetAsync(Uri url, int width, int height);
         public Task EnableTargetDiscoveryAsync(Action<IInteropTarget> tarqetCreated, Action<string> targetDestroyed);
         public Task<IInteropSession> OpenSessionAsync(IInteropTarget target);
     }
@@ -22,6 +18,7 @@ namespace LibChromeDotNet.ChromeInterop
     public interface IInteropTarget
     {
         public string Id { get; }
+        public string BrowserContextId { get; }
         public DebugTargetType Type { get; }
         public string Title { get; }
         public Uri NavigationUri { get; }

@@ -42,7 +42,7 @@ namespace LibChromeDotNet.HTML5
             private List<IAppWindow> _OpenWindows = new List<IAppWindow>();
             private object _Sync = new object();
             private bool _ExitLock = false;
-            private Task<IInteropSocket>? _InitTask;
+            private Task<IInteropSession>? _InitTask;
             private object _InitLock = new object();
 
             public async Task<IAppWindow> OpenWindowAsync(string contentPath = "/")
@@ -52,7 +52,8 @@ namespace LibChromeDotNet.HTML5
                     if (_ExitLock)
                         ThrowExited();
                 }
-                var contentUri = _Host._ContentHost.GetContentUri(contentPath);
+                var contentProvider = _Host._ContentHost.CreateContentProvider();
+                var contentUri = contentProvider.GetContentUri(contentPath);
                 var session = await CreateNewSession(contentUri);
                 var loadTaskSource = new TaskCompletionSource();
                 session.PageLoaded += loadTaskSource.SetResult;
@@ -91,56 +92,60 @@ namespace LibChromeDotNet.HTML5
 
             private async Task<IInteropSession> CreateNewSession(Uri url)
             {
-                bool rootWindow = false;
+                bool isRootWindow = false;
                 lock (_InitLock)
                 {
                     if (_InitTask == null)
                     {
-                        rootWindow = true;
-                        _InitTask = InitializeChromeAsync(url.ToString());
+                        isRootWindow = true;
+                        _InitTask = InitializeChromeAsync(url);
                     }
                 }
-                var socket = await _InitTask;
-                if (rootWindow)
-                {
-                    var rootTarget = (await socket.GetTargetsAsync())
-                        .Where(t => t.Type == DebugTargetType.Page)
-                        .First();
-                    return await socket.OpenSessionAsync(rootTarget);
-                }
-                else
-                {
-                    var newTarget = await socket.CreateTargetAsync(url);
-                    return await socket.OpenSessionAsync(newTarget);
-                }
+                var rootSession = await _InitTask;
+                if (isRootWindow)
+                    return rootSession;
+                var jsWindowOpenExpr = "(function(url){ window.open(url, null, {newWindow: true}); })";
+                await using (var jsWindowOpenFunc = (IJSFunction)await rootSession.EvaluateExpressionAsync(jsWindowOpenExpr))
+                    await jsWindowOpenFunc.CallAsync(IJSValue.FromString(url.ToString()));
+                var socket = rootSession.Socket;
+                var newTarget = (await socket.GetTargetsAsync())
+                    .Where(t => t.Type == DebugTargetType.Page && t.NavigationUri == url)
+                    .First();
+                return await socket.OpenSessionAsync(newTarget);
             }
 
-            private async Task<IInteropSocket> InitializeChromeAsync(string initialUrl)
+            private async Task<IInteropSession> InitializeChromeAsync(Uri initialUrl)
             {
-                var browser = await _Host._Launcher.LaunchAsync(initialUrl);
+                var browser = await _Host._Launcher.LaunchAsync(initialUrl.ToString());
                 var cdp = new CDPSocket();
                 await cdp.ConnectAsync(browser.CDPTarget, CancellationToken.None);
                 var sock = new InteropSocket(cdp);
                 sock.Detached += _Host._ContentHost.Stop;
-                return sock;
+                var rootTarget = (await sock.GetTargetsAsync())
+                    .Where(t => t.Type == DebugTargetType.Page && t.NavigationUri == initialUrl)
+                    .First();
+                return await sock.OpenSessionAsync(rootTarget);
             }
         }
 
         private class AppWindow : IAppWindow
         {
             private WebAppHost _Host;
+            private IWebContentProvider _ContentProvider;
             private IInteropSession _Session;
 
-            public AppWindow(WebAppHost host, IInteropSession session)
+            public AppWindow(WebAppHost host, IInteropSession session, IWebContentProvider contentProvider)
             {
                 _Host = host;
                 _Session = session;
+                _ContentProvider = contentProvider;
             }
 
             public async Task CloseAsync()
             {
                 await _Session.ClosePageAsync();
                 await _Session.DetachAsync();
+                _ContentProvider.Dispose();
             }
 
             public async Task<IDOMNode> GetDocumentBodyAsync()
@@ -150,7 +155,7 @@ namespace LibChromeDotNet.HTML5
 
             public async Task NavigateAsync(string contentPath)
             {
-                await _Session.NavigatePageAsync(_Host._ContentHost.GetContentUri(contentPath));
+                await _Session.NavigatePageAsync(_ContentProvider.GetContentUri(contentPath));
             }
         }
     }
