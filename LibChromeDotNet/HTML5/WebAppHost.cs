@@ -68,9 +68,10 @@ namespace LibChromeDotNet.HTML5
                 if (!docReady.Value)
                     await loadTaskSource.Task;
                 session.PageLoaded -= loadTaskSource.SetResult;
-                var result = new AppWindow(_Host, session, contentProvider);
+                AppWindow result;
                 lock (_Sync)
                 {
+                    result = new AppWindow(this, session, contentProvider, _OpenWindows.Count == 0);
                     if (_IsExited)
                     {
                         _ = result.CloseAsync();
@@ -144,15 +145,17 @@ namespace LibChromeDotNet.HTML5
 
         private class AppWindow : IAppWindow
         {
-            private WebAppHost _Host;
+            private WebAppContext _Context;
             private IWebContentProvider _ContentProvider;
             private IInteropSession _Session;
+            private bool _IsRoot;
 
-            public AppWindow(WebAppHost host, IInteropSession session, IWebContentProvider contentProvider)
+            public AppWindow(WebAppContext context, IInteropSession session, IWebContentProvider contentProvider, bool isRoot)
             {
-                _Host = host;
+                _Context = context;
                 _Session = session;
                 _ContentProvider = contentProvider;
+                _IsRoot = isRoot;
                 session.Detached += () => ClosedByUser?.Invoke();
             }
 
@@ -160,8 +163,11 @@ namespace LibChromeDotNet.HTML5
 
             public async Task CloseAsync()
             {
-                await _Session.ClosePageAsync();
                 _ContentProvider.Dispose();
+                if (_IsRoot)
+                    _Context.Exit();
+                else
+                    await _Session.ClosePageAsync();
             }
 
             public async Task<IDOMNode> GetDocumentBodyAsync()
