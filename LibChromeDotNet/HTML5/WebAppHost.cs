@@ -64,7 +64,7 @@ namespace LibChromeDotNet.HTML5
                 if (!docReady.Value)
                     await loadTaskSource.Task;
                 session.PageLoaded -= loadTaskSource.SetResult;
-                var result = new AppWindow(_Host, session);
+                var result = new AppWindow(_Host, session, contentProvider);
                 lock (_Sync)
                 {
                     if (_ExitLock)
