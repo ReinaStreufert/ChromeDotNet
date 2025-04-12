@@ -1,6 +1,8 @@
 ﻿using LibChromeDotNet.CDP;
 using LibChromeDotNet.ChromeApplication;
 using LibChromeDotNet.ChromeInterop;
+using LibChromeDotNet.HTML5.JS;
+using Newtonsoft.Json.Linq;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -145,7 +147,7 @@ namespace LibChromeDotNet.HTML5
                 }
             }
 
-            public void SetSession(IInteropSession session)
+            public async void SetSession(IInteropSession session)
             {
                 lock (_SessionSync)
                 {
@@ -160,12 +162,24 @@ namespace LibChromeDotNet.HTML5
                     ClosedByUser?.Invoke();
                     _Context.OnWindowClosed(this);
                 };
-
+                await using (var wAddEventListener = (IJSFunction)await session.EvaluateExpressionAsync("window.addEventListener"))
+                await using (var jsCallback = await session.AddJSBindingAsync((JObject o) => Interlocked.Exchange(ref _Context._FocusedWindow, this)))
+                {
+                    await wAddEventListener.CallAsync(
+                        IJSValue.FromString("focus"),
+                        jsCallback);
+                }
             }
 
-            public Task CreatePopupAsync(Uri uri)
+            public async Task CreatePopupAsync(Uri url)
             {
-
+                if (_IsClosed)
+                    throw new InvalidOperationException("Window is closed");
+                if (_Session == null)
+                    throw new InvalidOperationException("call WaitForSession");
+                var jsWindowOpenExpr = "(function(url,name){ window.open(url, name, \"popup=true,noopener=true,noreferrer=true\"); })"; // random popup names ensure a new window is always generated.
+                await using (var jsWindowOpenFunc = (IJSFunction)await _Session.EvaluateExpressionAsync(jsWindowOpenExpr))
+                    await jsWindowOpenFunc.CallAsync(IJSValue.FromString(url.ToString()), IJSValue.FromString(Identifier.New()));
             }
 
             public async Task CloseAsync()
