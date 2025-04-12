@@ -16,7 +16,6 @@ namespace LibChromeDotNet.ChromeInterop
         }
 
         private ICDPSocket _CDP;
-        private string? _LastBrowserContextId;
 
         public void Dispose() => _CDP.Dispose();
         public Task CloseAsync() => _CDP.CloseAsync();
@@ -28,6 +27,16 @@ namespace LibChromeDotNet.ChromeInterop
             await _CDP.RequestAsync(Target.SetDiscoverTargets(true));
         }
 
+        public async Task EnableAutoAttachAsync(Action<IInteropSession> targetAttached)
+        {
+            _CDP.SubscribeEvent(Target.AttachedToTarget, e =>
+            {
+                var session = new InteropSession(this, e.Info, _CDP, e.SessionId);
+                targetAttached(session);
+            });
+            await _CDP.RequestAsync(Target.SetAutoAttach(true));
+        }
+
         public async Task<IEnumerable<IInteropTarget>> GetTargetsAsync()
         {
             return (await _CDP.RequestAsync(Target.GetTargets()))
@@ -37,16 +46,20 @@ namespace LibChromeDotNet.ChromeInterop
         public async Task<IInteropSession> OpenSessionAsync(IInteropTarget target)
         {
             var sessionId = await _CDP.RequestAsync(Target.AttachToTarget(target.Id));
-            Interlocked.Exchange(ref _LastBrowserContextId, target.BrowserContextId);
             var session = new InteropSession(this, target, _CDP, sessionId);
-            _ = session.RequestAsync(Page.Enable);
-            _ = session.RequestAsync(Runtime.Enable);
-            return session;
+            return await InitializeSessionAsync(session);
         }
 
         public async Task ActivateTargetAsync(IInteropTarget target)
         {
             await _CDP.RequestAsync(Target.ActivateTarget(target.Id));
+        }
+
+        private async Task<IInteropSession> InitializeSessionAsync(IInteropSession session)
+        {
+            await session.RequestAsync(Page.Enable);
+            await session.RequestAsync(Runtime.Enable);
+            return session;
         }
     }
 }

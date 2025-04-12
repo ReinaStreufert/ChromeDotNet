@@ -13,5 +13,6 @@ namespace LibChromeDotNet.HTML5
         public Task CloseAsync();
         public Task<IDOMNode> GetDocumentBodyAsync();
         public Task NavigateAsync(string contentPath);
+        public string DocumentLocation { get; }
     }
 }

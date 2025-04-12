@@ -10,6 +10,7 @@ namespace LibChromeDotNet.CDP.Domains
 {
     public static class Target
     {
+        public static ICDPEvent<TargetAttachEvent> AttachedToTarget => CDP.Event("Target.attachedToTarget", json => new TargetAttachEvent(json));
         public static ICDPEvent<string> DetachedFromTarget => CDP.Event("Target.detachedFromTarget", json => json["sessionId"]!.ToString());
 
         public static ICDPRequest<IEnumerable<TargetInfo>> GetTargets(string? filter = null)
@@ -23,6 +24,16 @@ namespace LibChromeDotNet.CDP.Domains
                     .Cast<JObject>()
                     .Select(o => new TargetInfo(o));
             });
+        }
+
+        public static ICDPRequest SetAutoAttach(bool enable, bool flatten = true)
+        {
+            var paramsJson = new JObject()
+            {
+                { "autoAttach", enable },
+                { "flatten", flatten }
+            };
+            return CDP.Request("Target.setAutoAttach", paramsJson);
         }
 
         public static ICDPRequest ActivateTarget(string targetId)
@@ -108,5 +119,17 @@ namespace LibChromeDotNet.CDP.Domains
         string IInteropTarget.Title => Title;
         Uri IInteropTarget.NavigationUri => NavigationUri;
         string IInteropTarget.BrowserContextId => BrowserContextId;
+    }
+
+    public struct TargetAttachEvent
+    {
+        public string SessionId;
+        public TargetInfo Info;
+
+        public TargetAttachEvent(JObject jsonObject)
+        {
+            SessionId = jsonObject["sessionId"]!.ToString();
+            Info = new TargetInfo((JObject)jsonObject["targetInfo"]!);
+        }
     }
 }

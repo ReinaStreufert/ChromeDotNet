@@ -11,6 +11,7 @@ namespace LibChromeDotNet.ChromeInterop
         public Task CloseAsync();
         public Task<IEnumerable<IInteropTarget>> GetTargetsAsync();
         public Task EnableTargetDiscoveryAsync(Action<IInteropTarget> tarqetCreated, Action<string> targetDestroyed);
+        public Task EnableAutoAttachAsync(Action<IInteropSession> targetAttached);
         public Task<IInteropSession> OpenSessionAsync(IInteropTarget target);
         public Task ActivateTargetAsync(IInteropTarget target);
     }
