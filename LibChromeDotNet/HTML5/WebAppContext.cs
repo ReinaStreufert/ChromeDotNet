@@ -8,6 +8,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using static System.Collections.Specialized.BitVector32;
 
 namespace LibChromeDotNet.HTML5
 {
@@ -25,6 +26,7 @@ namespace LibChromeDotNet.HTML5
         private object _Sync = new object();
         private Task<IInteropSocket>? _Socket;
         private List<AppWindow> _OpenedWindows = new List<AppWindow>();
+        private List<AppWindow> _LoadingWindows = new List<AppWindow>();
         private AppWindow? _FocusedWindow;
         private bool _IsExited = false;
 
@@ -48,14 +50,14 @@ namespace LibChromeDotNet.HTML5
         {
             var contentProvider = _ContentHost.CreateContentProvider();
             var window = new AppWindow(this, contentPath, contentProvider);
-            Interlocked.Exchange(ref _FocusedWindow, window);
             lock (_Sync)
             {
                 if (_IsExited)
                     throw new InvalidOperationException("The app context has exited");
-                _OpenedWindows.Add(window);
+                _LoadingWindows.Add(window);
             }
             CreateWindow(contentProvider.GetContentUri(contentPath));
+            Interlocked.Exchange(ref _FocusedWindow, window);
             await Task.Run(window.WaitForSession);
             return window;
         }
@@ -92,26 +94,33 @@ namespace LibChromeDotNet.HTML5
             var cdp = new CDPSocket();
             await cdp.ConnectAsync(browser.CDPTarget, CancellationToken.None);
             var socket = new InteropSocket(cdp);
-            await socket.EnableAutoAttachAsync(async s => await OnSessionAttachAsync(s));
+            await socket.EnableTargetDiscoveryAsync(async t => await OnTargetDiscoveredAsync(socket, t));
             return socket;
         }
 
-        private async Task OnSessionAttachAsync(IInteropSession session)
+        private async Task OnTargetDiscoveredAsync(IInteropSocket socket, IInteropTarget target)
         {
-            var uri = session.SessionTarget.NavigationUri;
-            lock (_Sync)
+            var uri = target.NavigationUri;
+            if (target.Type == DebugTargetType.Page)
             {
-                foreach (var window in _OpenedWindows)
+                AppWindow? window;
+                lock (_Sync)
                 {
-                    if (window.LocalHostUri == uri)
+                    window = _LoadingWindows
+                        .Where(w => w.LocalHostUri == uri)
+                        .FirstOrDefault();
+                    if (window != null)
                     {
-                        window.SetSession(session);
-                        break;
+                        _LoadingWindows.Remove(window);
+                        _OpenedWindows.Add(window);
                     }
                 }
+                if (window == null)
+                    return;
+                var session = await socket.OpenSessionAsync(target);
+                window.SetSession(session);
+                //await socket.EnableTargetDiscoveryAsync(async t => await OnTargetDiscoveredAsync(socket, t));
             }
-            // when session does not correspond to an AppWindow:
-            await session.DetachAsync();
         }
 
         private class AppWindow : IAppWindow
@@ -149,13 +158,6 @@ namespace LibChromeDotNet.HTML5
 
             public async void SetSession(IInteropSession session)
             {
-                lock (_SessionSync)
-                {
-                    if (_Session != null)
-                        throw new InvalidOperationException("if this is thrown something is deeply wrong...");
-                    _Session = session;
-                    Monitor.PulseAll(_SessionSync);
-                }
                 session.Detached += () =>
                 {
                     _IsClosed = true;
@@ -168,6 +170,22 @@ namespace LibChromeDotNet.HTML5
                     await wAddEventListener.CallAsync(
                         IJSValue.FromString("focus"),
                         jsCallback);
+                }
+                var loadTaskSource = new TaskCompletionSource();
+                session.PageLoaded += loadTaskSource.SetResult;
+                var docReadyExpr = "(function(url) { return document.URL.toLowerCase() == url.toLowerCase() && document.readyState != \"loading\" })";
+                JSValue<bool> docReady;
+                await using (var docReadyFunc = (IJSFunction)await session.EvaluateExpressionAsync(docReadyExpr))
+                    docReady = (JSValue<bool>)await docReadyFunc.CallAsync(IJSValue.FromString(LocalHostUri.ToString()));
+                if (!docReady.Value)
+                    await loadTaskSource.Task;
+                session.PageLoaded -= loadTaskSource.SetResult;
+                lock (_SessionSync)
+                {
+                    if (_Session != null)
+                        throw new InvalidOperationException("if this is thrown something is deeply wrong...");
+                    _Session = session;
+                    Monitor.PulseAll(_SessionSync);
                 }
             }
 

@@ -1,4 +1,4 @@
-﻿using LibChromeDotNet.CDP;
+﻿/*using LibChromeDotNet.CDP;
 using LibChromeDotNet.ChromeApplication;
 using LibChromeDotNet.ChromeInterop;
 using LibChromeDotNet.HTML5.JS;
@@ -185,3 +185,4 @@ namespace LibChromeDotNet.HTML5
         }
     }
 }
+*/

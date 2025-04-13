@@ -9,6 +9,8 @@ namespace LibChromeDotNet.HTML5
 {
     public class WebAppHost : IWebAppHost
     {
+        public static IWebAppHost Create(IWebApp app) => new WebAppHost(ChromeLauncher.CreateForPlatform(), app);
+
         private WebAppHost(IChromeLauncher launcher, IWebApp app)
         {
             _App = app;
@@ -19,9 +21,12 @@ namespace LibChromeDotNet.HTML5
         private IChromeLauncher _Launcher;
         private IWebContentHost _ContentHost = new WebContentHost();
 
-        public Task LaunchAppAsync()
+        public async Task LaunchAppAsync()
         {
-            throw new NotImplementedException();
+            var listenTask = _ContentHost.ListenAsync(_App.Content);
+            var context = new WebAppContext(_Launcher, _ContentHost);
+            await _App.OnStartupAsync(context);
+            await listenTask;
         }
     }
 }

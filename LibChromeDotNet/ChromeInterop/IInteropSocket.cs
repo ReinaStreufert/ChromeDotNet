@@ -10,6 +10,7 @@ namespace LibChromeDotNet.ChromeInterop
     {
         public Task CloseAsync();
         public Task<IEnumerable<IInteropTarget>> GetTargetsAsync();
+        public Task EnableTargetDiscoveryAsync(Action<IInteropTarget> tarqetCreated);
         public Task EnableTargetDiscoveryAsync(Action<IInteropTarget> tarqetCreated, Action<string> targetDestroyed);
         public Task EnableAutoAttachAsync(Action<IInteropSession> targetAttached);
         public Task<IInteropSession> OpenSessionAsync(IInteropTarget target);
@@ -22,7 +23,7 @@ namespace LibChromeDotNet.ChromeInterop
         public string BrowserContextId { get; }
         public DebugTargetType Type { get; }
         public string Title { get; }
-        public Uri NavigationUri { get; }
+        public Uri? NavigationUri { get; }
     }
 
     public enum DebugTargetType

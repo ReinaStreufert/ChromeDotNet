@@ -20,17 +20,27 @@ namespace LibChromeDotNet.ChromeInterop
         public void Dispose() => _CDP.Dispose();
         public Task CloseAsync() => _CDP.CloseAsync();
 
-        public async Task EnableTargetDiscoveryAsync(Action<IInteropTarget> tarqetCreated, Action<string> targetDestroyed)
+        public async Task EnableTargetDiscoveryAsync(Action<IInteropTarget> targetCreated)
         {
-            _CDP.SubscribeEvent(Target.OnTargetCreated, targetInfo => tarqetCreated(targetInfo));
-            _CDP.SubscribeEvent(Target.OnTargetDestroyed, targetDestroyed);
+            _CDP.SubscribeEvent(Target.TargetCreated, targetInfo => targetCreated(targetInfo));
+            _CDP.SubscribeEvent(Target.TargetUpdated, targetInfo => targetCreated(targetInfo));
+            await _CDP.RequestAsync(Target.SetDiscoverTargets(true));
+        }
+
+        public async Task EnableTargetDiscoveryAsync(Action<IInteropTarget> targetCreated, Action<string> targetDestroyed)
+        {
+            _CDP.SubscribeEvent(Target.TargetCreated, targetInfo => targetCreated(targetInfo));
+            _CDP.SubscribeEvent(Target.TargetUpdated, targetInfo => targetCreated(targetInfo));
+            _CDP.SubscribeEvent(Target.TargetDestroyed, targetDestroyed);
             await _CDP.RequestAsync(Target.SetDiscoverTargets(true));
         }
 
         public async Task EnableAutoAttachAsync(Action<IInteropSession> targetAttached)
         {
-            _CDP.SubscribeEvent(Target.AttachedToTarget, e =>
+            _CDP.SubscribeEvent(Target.AttachedToTarget, async e =>
             {
+                if (e.Info.Type == DebugTargetType.Browser)
+                    await _CDP.RequestAsync(Target.AutoAttachRelated(e.Info.Id));
                 var session = new InteropSession(this, e.Info, _CDP, e.SessionId);
                 targetAttached(session);
             });

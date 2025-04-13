@@ -10,6 +10,9 @@ namespace LibChromeDotNet.CDP.Domains
 {
     public static class Target
     {
+        public static ICDPEvent<TargetInfo> TargetCreated => CDP.Event("Target.targetCreated", resultJson => new TargetInfo((JObject)resultJson["targetInfo"]!));
+        public static ICDPEvent<TargetInfo> TargetUpdated => CDP.Event("Target.targetInfoChanged", resultJson => new TargetInfo((JObject)resultJson["targetInfo"]!));
+        public static ICDPEvent<string> TargetDestroyed => CDP.Event("Target.targetDestroyed", resultJson => resultJson["targetId"]!.ToString());
         public static ICDPEvent<TargetAttachEvent> AttachedToTarget => CDP.Event("Target.attachedToTarget", json => new TargetAttachEvent(json));
         public static ICDPEvent<string> DetachedFromTarget => CDP.Event("Target.detachedFromTarget", json => json["sessionId"]!.ToString());
 
@@ -31,9 +34,20 @@ namespace LibChromeDotNet.CDP.Domains
             var paramsJson = new JObject()
             {
                 { "autoAttach", enable },
-                { "flatten", flatten }
+                { "flatten", flatten },
+                { "waitForDebuggerOnStart", false }
             };
             return CDP.Request("Target.setAutoAttach", paramsJson);
+        }
+
+        public static ICDPRequest AutoAttachRelated(string targetId)
+        {
+            var paramsJson = new JObject()
+            {
+                { "targetId", targetId },
+                { "waitForDebuggerOnStart", false }
+            };
+            return CDP.Request("Target.autoAttachRelated", paramsJson); // i would like to speak with whoever designed this protocol
         }
 
         public static ICDPRequest ActivateTarget(string targetId)
@@ -92,9 +106,6 @@ namespace LibChromeDotNet.CDP.Domains
             };
             return CDP.Request("Target.setDiscoverTargets", paramsJson);
         }
-
-        public static ICDPEvent<TargetInfo> OnTargetCreated => CDP.Event("Target.targetCreated", resultJson => new TargetInfo((JObject)resultJson["targetInfo"]!));
-        public static ICDPEvent<string> OnTargetDestroyed => CDP.Event("Target.targetDestroyed", resultJson => resultJson["targetId"]!.ToString());
     }
 
     public struct TargetInfo : IInteropTarget
@@ -103,7 +114,7 @@ namespace LibChromeDotNet.CDP.Domains
         public string BrowserContextId;
         public DebugTargetType Type;
         public string Title;
-        public Uri NavigationUri;
+        public Uri? NavigationUri;
 
         public TargetInfo(JObject jsonObject)
         {
@@ -111,7 +122,9 @@ namespace LibChromeDotNet.CDP.Domains
             BrowserContextId = jsonObject["browserContextId"]!.ToString();
             Type = Enum.Parse<DebugTargetType>(jsonObject["type"]!.ToString(), true);
             Title = jsonObject["title"]!.ToString();
-            NavigationUri = new Uri(jsonObject["url"]!.ToString());
+            var url = jsonObject["url"]?.ToString();
+            if (url != null && url != string.Empty)
+                NavigationUri = new Uri(url);
         }
 
         string IInteropTarget.Id => Id;
