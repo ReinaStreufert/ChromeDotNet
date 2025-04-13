@@ -32,22 +32,11 @@ namespace ChromeDotNet_Test
         {
             var window = await context.OpenWindowAsync();
             var docBody = await window.GetDocumentBodyAsync();
-            var currentPosHead = await docBody.QuerySelectAsync<HTMLTextElement>("#current-pos-head");
-            var clickPosHead = await docBody.QuerySelectAsync<HTMLTextElement>("#click-pos-head");
-            var contentDiv = await docBody.QuerySelectAsync("#content");
-            await contentDiv.AddEventListenerAsync(MouseEvent.Click, e =>
-            {
-                clickPosHead.Text = $"You clicked at: ({e.ClientX},{e.ClientY})";
-            });
-            await contentDiv.AddEventListenerAsync(MouseEvent.MouseMove, e =>
-            {
-                currentPosHead.Text = $"Your pointer is at: ({e.ClientX},{e.ClientY})";
-            });
-
-            var openButton = await docBody.QuerySelectAsync("#open-button");
-            var closeButton = await docBody.QuerySelectAsync("#close-button");
-            await openButton.AddEventListenerAsync(MouseEvent.Click, async (e) => await OpenTestWindowAsync(context));
-            await closeButton.AddEventListenerAsync(MouseEvent.Click, async (e) => await window.CloseAsync());
+            var currentTextHead = await docBody.QuerySelectAsync<HTMLTextElement>("#current-text-head");
+            var textboxInput = await docBody.QuerySelectAsync<HTMLInputElement>("#textbox");
+            var clearButtonNode = await docBody.QuerySelectAsync("#clear-button");
+            textboxInput.ValueChanged += () => currentTextHead.Text = textboxInput.Value;
+            await clearButtonNode.AddEventListenerAsync(MouseEvent.Click, e => textboxInput.Value = "");
         }
     }
 }

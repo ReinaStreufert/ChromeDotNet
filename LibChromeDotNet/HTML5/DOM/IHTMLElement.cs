@@ -11,6 +11,5 @@ namespace LibChromeDotNet.HTML5.DOM
     public interface IHTMLElement : IAsyncDisposable
     {
         public IDOMNode Node { get; }
-        public IClassList Classes { get; }
     }
 }
