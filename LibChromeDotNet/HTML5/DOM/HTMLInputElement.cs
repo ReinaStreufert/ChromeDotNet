@@ -12,18 +12,9 @@ namespace LibChromeDotNet.HTML5.DOM
         public static async Task<HTMLInputElement> FromDOMNodeAsync(IDOMNode node)
         {
             var session = node.Session;
-            IJSGetter valueGetter;
-            IJSSetter valueSetter;
-            await using (var jsNode = await node.GetJavascriptNodeAsync())
-            {
-                valueGetter = await jsNode.BindGetterAsync("value");
-                valueSetter = await jsNode.BindSetterAsync("value");
-            }
             string initialValue = (await valueGetter.GetValueAsync()).ToString()!;
             var result = new HTMLInputElement();
             result._Node = node;
-            result._ValueGetter = valueGetter;
-            result._ValueSetter = valueSetter;
             result._Value = initialValue;
             result._ChangeEventListener = await node.AddEventListenerAsync(KeyboardEvent.KeyDown, e => _ = result.OnValueChangedAsync(e));
             return result;
@@ -42,18 +33,20 @@ namespace LibChromeDotNet.HTML5.DOM
 
         private IDOMNode _Node;
         private IAsyncDisposable _ChangeEventListener;
-        private IJSGetter _ValueGetter;
-        private IJSSetter _ValueSetter;
         private string _Value;
 
-        public async Task SetValueAsync(string value) => await _ValueSetter.SetValueAsync(IJSValue.FromString(value));
+        public async Task SetValueAsync(string value)
+        {
+            await using (var jsNode = await _Node.GetJavascriptNodeAsync())
+                await jsNode.CallFunctionAsync("HTMLInputElement.prototype.value", IJSValue.FromString(value));
+        }
 
         private async Task OnValueChangedAsync(KeyboardEventArgs e)
         {
             await using (var jsNode = await _Node.GetJavascriptNodeAsync())
             {
                 var oldValue = _Value;
-                var newValue = (await _ValueGetter.GetValueAsync()).ToString()!;
+                var newValue = (await jsNode.CallFunctionAsync("HTMLInputElement.prototype.value")).ToString();
                 if (oldValue != newValue)
                 {
                     Interlocked.Exchange(ref _Value, newValue);
