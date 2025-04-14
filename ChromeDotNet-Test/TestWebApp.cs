@@ -1,6 +1,7 @@
 ﻿using LibChromeDotNet.CDP.Domains;
 using LibChromeDotNet.ChromeInterop;
 using LibChromeDotNet.HTML5;
+using LibChromeDotNet.HTML5.CSS;
 using LibChromeDotNet.HTML5.DOM;
 using System;
 using System.Collections.Generic;
@@ -32,11 +33,13 @@ namespace ChromeDotNet_Test
         {
             var window = await context.OpenWindowAsync();
             var docBody = await window.GetDocumentBodyAsync();
-            var currentTextHead = await docBody.QuerySelectAsync<HTMLTextElement>("#current-text-head");
-            var textboxInput = await docBody.QuerySelectAsync<HTMLInputElement>("#textbox");
-            var clearButtonNode = await docBody.QuerySelectAsync("#clear-button");
-            textboxInput.ValueChanged += () => currentTextHead.Text = textboxInput.Value;
-            await clearButtonNode.AddEventListenerAsync(MouseEvent.Click, e => textboxInput.Value = "");
+            var contentDivNode = await docBody.QuerySelectAsync("#content");
+            var toggleButtonNode = await docBody.QuerySelectAsync("#toggle-rainbow-button");
+            var contentClassList = await contentDivNode.GetClassListAsync();
+            await toggleButtonNode.AddEventListenerAsync(MouseEvent.Click, async e =>
+            {
+                await contentClassList.ToggleAsync("rainbow");
+            });
         }
     }
 }

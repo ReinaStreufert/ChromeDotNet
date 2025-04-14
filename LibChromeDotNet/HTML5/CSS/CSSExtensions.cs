@@ -1,4 +1,5 @@
 ﻿using LibChromeDotNet.ChromeInterop;
+using LibChromeDotNet.HTML5.JS;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -9,40 +10,50 @@ namespace LibChromeDotNet.HTML5.CSS
 {
     public static class CSSExtensions
     {
+        public static async Task<ICSSClassList> GetClassListAsync(this IDOMNode node)
+        {
+            await using (var jsNode = await node.GetJavascriptNodeAsync())
+            await using (var getter = await jsNode.BindGetterAsync("classList"))
+            {
+                var jsClassList = (IJSObject)await getter.GetValueAsync();
+                return new ClassList(jsClassList);
+            }
+        }
+
         private class ClassList : ICSSClassList
         {
-            public ClassList(IJSObject classListJS)
+            public ClassList(IJSObject jsClassList)
             {
-                _ClassListJS = classListJS;
+                _JSClassList = jsClassList;
             }
 
-            private IJSObject _ClassListJS;
+            private IJSObject _JSClassList;
 
             public async Task<bool> ContainsAsync(string className)
             {
-                var result = await _ClassListJS.CallFunctionAsync("DOMTokenList.prototype.contains", IJSValue.FromString(className));
+                var result = await _JSClassList.CallFunctionAsync("DOMTokenList.prototype.contains", IJSValue.FromString(className));
                 return ((IJSValue<bool>)result).Value;
             }
 
             public async Task<bool> ToggleAsync(string className)
             {
-                var result = await _ClassListJS.CallFunctionAsync("DOMTokenList.prototype.toggle", IJSValue.FromString(className));
+                var result = await _JSClassList.CallFunctionAsync("DOMTokenList.prototype.toggle", IJSValue.FromString(className));
                 return ((IJSValue<bool>)result).Value;
             }
 
             public async Task AddAsync(string className)
             {
-                await _ClassListJS.CallFunctionAsync("DOMTokenList.prototype.add", IJSValue.FromString(className));
+                await _JSClassList.CallFunctionAsync("DOMTokenList.prototype.add", IJSValue.FromString(className));
             }
 
             public async Task RemoveAsync(string className)
             {
-                await _ClassListJS.CallFunctionAsync("DOMTokenList.prototype.remove", IJSValue.FromString(className));
+                await _JSClassList.CallFunctionAsync("DOMTokenList.prototype.remove", IJSValue.FromString(className));
             }
 
             public async ValueTask DisposeAsync()
             {
-                await _ClassListJS.DisposeAsync();
+                await _JSClassList.DisposeAsync();
             }
         }
     }
