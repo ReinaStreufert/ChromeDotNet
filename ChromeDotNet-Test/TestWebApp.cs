@@ -23,6 +23,9 @@ namespace ChromeDotNet_Test
         }
 
         private WebContent _Content = new WebContent();
+        private object _Sync = new object();
+        private Task? _RainbowTask;
+        private CancellationTokenSource _RainbowCancelSource = new CancellationTokenSource();
 
         public async Task OnStartupAsync(IAppContext context)
         {
@@ -33,13 +36,60 @@ namespace ChromeDotNet_Test
         {
             var window = await context.OpenWindowAsync();
             var docBody = await window.GetDocumentBodyAsync();
-            var contentDivNode = await docBody.QuerySelectAsync("#content");
-            var toggleButtonNode = await docBody.QuerySelectAsync("#toggle-rainbow-button");
-            var contentClassList = await contentDivNode.GetClassListAsync();
-            await toggleButtonNode.AddEventListenerAsync(MouseEvent.Click, async e =>
+            var heading = await docBody.QuerySelectAsync<HTMLTextElement>("#heading");
+            var toggleColorsButton = await docBody.QuerySelectAsync("#toggle-colors");
+            var msg = "the.quick.brown.fox.jumps.over.the.lazy.dog";
+            var rainbowColors = new ICSSColor[]
             {
-                await contentClassList.ToggleAsync("rainbow");
+                CSSColor.FromRGBA(1f, 0f, 0f), // red
+                CSSColor.FromRGBA(1f, 0.7f, 0f), // orange
+                CSSColor.FromRGBA(1f, 1f, 0f), // yellow
+                CSSColor.FromRGBA(0.3f, 1f, 0f), // green
+                CSSColor.FromRGBA(0f, 0.3f, 1f), // teal-ish blue
+                CSSColor.FromRGBA(0.7f, 0f, 1f) // purple
+            };
+
+            await toggleColorsButton.AddEventListenerAsync(MouseEvent.Click, e =>
+            {
+                lock (_Sync)
+                {
+                    if (_RainbowTask == null)
+                        _RainbowTask = AnimateTextAsync(heading, msg, _RainbowCancelSource.Token, rainbowColors);
+                    else
+                    {
+                        _RainbowCancelSource.Cancel();
+                        _RainbowCancelSource = new CancellationTokenSource();
+                        _RainbowTask = null;
+                    }
+                }
             });
+        }
+
+        private static async Task AnimateTextAsync(HTMLTextElement textElement, string text, CancellationToken cancelToken, params ICSSColor[] colors)
+        {
+            var offset = 0;
+            while (!cancelToken.IsCancellationRequested)
+            {
+                FormattedTextNode? firstNode = null;
+                FormattedTextNode? lastNode = null;
+                for (int i = 0; i < text.Length; i++)
+                {
+                    var color = colors[(i + offset) % colors.Length];
+                    var style = ((i + offset) % 2 > 0) ? FontStyle.Strikethrough | FontStyle.Underline : FontStyle.Regular;
+                    var node = new FormattedTextNode(text[i].ToString(), style, color);
+                    if (lastNode == null)
+                        firstNode = node;
+                    else
+                        lastNode.InsertAfter(node);
+                    lastNode = node;
+                }
+                if (firstNode == null)
+                    throw new ArgumentException(nameof(text));
+                var formattedText = new FormattedText(firstNode);
+                await textElement.SetTextAsync(formattedText);
+                await Task.Delay(200);
+                offset = (offset + 1) % colors.Length;
+            }
         }
     }
 }

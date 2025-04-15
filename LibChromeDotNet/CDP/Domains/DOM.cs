@@ -72,14 +72,14 @@ namespace LibChromeDotNet.CDP.Domains
             return CDP.Request("DOM.getOuterHTML", jsonParams, resultJson => resultJson["outerHTML"]!.ToString());
         }
 
-        public static ICDPRequest<int> SetOuterHTML(int nodeId, string outerHTML)
+        public static ICDPRequest SetOuterHTML(int nodeId, string outerHTML) // the documentation for cdp is lowkey wrong
         {
             var jsonParams = new JObject()
             {
                 { "nodeId", nodeId },
                 { "outerHTML", outerHTML }
             };
-            return CDP.Request("DOM.setOuterHTML", jsonParams, resultJson => (int)resultJson["nodeId"]!);
+            return CDP.Request("DOM.setOuterHTML", jsonParams);
         }
 
         public static ICDPRequest<DOMNodeTree> GetNodeTree(int rootNodeId, int depth = -1)

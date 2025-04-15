@@ -21,7 +21,7 @@ namespace LibChromeDotNet.ChromeInterop
         public Task<IEnumerable<IDOMNode>> GetChildrenAsync();
         public Task<IDOMNode[]> QuerySelectManyAsync(string selector);
         public Task<XmlDocument> GetOuterHTMLAsync();
-        public Task<IDOMNode> ModifyOuterHTMLAsync(XmlDocument outerHTML);
+        public Task ModifyOuterHTMLAsync(XmlDocument outerHTML);
         public Task DeleteNodeAsync();
     }
 }

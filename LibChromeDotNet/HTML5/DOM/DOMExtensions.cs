@@ -58,11 +58,11 @@ namespace LibChromeDotNet.HTML5.DOM
             return string.Concat(childTextNodes);
         }
 
-        public static async Task<IDOMNode> SetInnerTextAsync(this IDOMNode node, string textValue)
+        public static async Task SetInnerTextAsync(this IDOMNode node, string textValue)
         {
             var xml = await node.GetOuterHTMLAsync();
             xml.DocumentElement!.InnerText = textValue;
-            return await node.ModifyOuterHTMLAsync(xml);
+            await node.ModifyOuterHTMLAsync(xml);
         }
 
         public static async Task<TElement> QuerySelectAsync<TElement>(this IDOMNode node, string selector) where TElement : IHTMLElement

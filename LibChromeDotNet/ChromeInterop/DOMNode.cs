@@ -88,12 +88,10 @@ namespace LibChromeDotNet.ChromeInterop
             return xmlHTML;
         }
 
-        public async Task<IDOMNode> ModifyOuterHTMLAsync(XmlDocument outerHTML)
+        public async Task ModifyOuterHTMLAsync(XmlDocument outerHTML)
         {
             var plainHTML = outerHTML.DocumentElement?.OuterXml ?? throw new ArgumentException($"{nameof(outerHTML)} xml has no root");
-            var newNodeId = await _Session.RequestAsync(DOM.SetOuterHTML(_NodeInfo.Id, plainHTML));
-            var newNodeTree = await _Session.RequestAsync(DOM.GetNodeTree(newNodeId, 2));
-            return new DOMNode(_Session, newNodeTree);
+            await _Session.RequestAsync(DOM.SetOuterHTML(_NodeInfo.Id, plainHTML));
         }
     }
 }

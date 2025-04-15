@@ -13,11 +13,13 @@ namespace LibChromeDotNet.HTML5.CSS
 
     public class CSSColor : ICSSColor
     {
-        public static ICSSColor FromRGBA(float r, float g, float b, float a)
+        public static ICSSColor FromRGBA(float r, float g, float b, float a = 1f)
         {
-            var hexCode = $"#{(r * 255):X2}{(g * 255):X2}{(b * 255):X2}{(a * 255):X2}";
+            var hexCode = $"#{GetByteColorVec(r):X2}{GetByteColorVec(g):X2}{GetByteColorVec(b):X2}{GetByteColorVec(a):X2}";
             return new CSSColor(hexCode);
         }
+
+        private static int GetByteColorVec(float value) => (int)Math.Round(value * 255);
 
         public string Name => _Name;
 

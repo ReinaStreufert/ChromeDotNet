@@ -50,42 +50,54 @@ namespace LibChromeDotNet.HTML5.CSS
             outerElement.InnerText = node.Text;
         }
 
-        private string GetFormatTagName(TextStyle style)
+        private string GetFormatTagName(FontStyle style)
         {
             return style switch
             {
-                TextStyle.Bold => "b",
-                TextStyle.Italic => "i",
-                TextStyle.Underline => "u",
-                TextStyle.Strikethrough => "s",
-                TextStyle.Superscript => "sup",
-                TextStyle.Subscript => "sub",
+                FontStyle.Bold => "b",
+                FontStyle.Italic => "i",
+                FontStyle.Underline => "u",
+                FontStyle.Strikethrough => "s",
+                FontStyle.Superscript => "sup",
+                FontStyle.Subscript => "sub",
                 _ => throw new NotImplementedException()
             };
         }
 
-        private IEnumerable<TextStyle> GetStyles(TextStyle flags)
+        private IEnumerable<FontStyle> GetStyles(FontStyle flags)
         {
             // get individual style components from bitwise flags
-            var testFlag = TextStyle.Superscript;
-            while (testFlag > 0)
+            var testFlag = FontStyle.Superscript;
+            while ((int)testFlag > 0)
             {
                 if ((flags & testFlag) > 0)
                     yield return testFlag;
-                testFlag = (TextStyle)((int)testFlag << 1);
+                testFlag = (FontStyle)((int)testFlag >> 1);
             }
+        }
+
+        public override string ToString()
+        {
+            var sb = new StringBuilder();
+            FormattedTextNode? node = FirstNode;
+            while (node != null)
+            {
+                sb.Append(node.Text);
+                node = node.Next;
+            }
+            return sb.ToString();
         }
     }
 
     public class FormattedTextNode
     {
-        public FormattedTextNode? Previous { get; }
-        public FormattedTextNode? Next { get; }
+        public FormattedTextNode? Previous => _Previous;
+        public FormattedTextNode? Next => _Next;
         public string Text { get; }
-        public TextStyle Style { get; }
-        public CSSColor? Color { get; }
+        public FontStyle Style { get; }
+        public ICSSColor? Color { get; }
 
-        public FormattedTextNode(string text, TextStyle style, CSSColor? color = null)
+        public FormattedTextNode(string text, FontStyle style, ICSSColor? color = null)
         {
             Text = text;
             Style = style;
@@ -125,7 +137,7 @@ namespace LibChromeDotNet.HTML5.CSS
     }
 
     [Flags]
-    public enum TextStyle
+    public enum FontStyle
     {
         Regular = 0,
         Bold = 1,
