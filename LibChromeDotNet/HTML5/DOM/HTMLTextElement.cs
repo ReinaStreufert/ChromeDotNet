@@ -40,6 +40,7 @@ namespace LibChromeDotNet.HTML5.DOM
                     {
                         _Text = text;
                         _Node = newNode;
+                        break;
                     }
                     // in the case of concurrent calls to SetTextAsync, a previous call may replace _Node while this call awaits
                     // the response from oldNode. this one mean the second call would likely fail and be ignored. i decided to handle this case
