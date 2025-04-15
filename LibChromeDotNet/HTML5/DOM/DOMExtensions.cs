@@ -58,22 +58,11 @@ namespace LibChromeDotNet.HTML5.DOM
             return string.Concat(childTextNodes);
         }
 
-        public static async Task SetInnerTextAsync(this IDOMNode node, string textValue)
+        public static async Task<IDOMNode> SetInnerTextAsync(this IDOMNode node, string textValue)
         {
-            var childTextNodes = (await node.GetChildrenAsync())
-                .Where(n => n.NodeType == CDP.Domains.DOMNodeType.Text);
-            if (!childTextNodes.Any())
-                throw new ArgumentException($"{nameof(node)} has no text children");
-            bool firstNode = true;
-            foreach (var textChild in childTextNodes)
-            {
-                if (firstNode)
-                {
-                    firstNode = false;
-                    await textChild.SetValueAsync(textValue);
-                }
-                else await textChild.DeleteNodeAsync();
-            }
+            var xml = await node.GetOuterHTMLAsync();
+            xml.DocumentElement!.InnerText = textValue;
+            return await node.ModifyOuterHTMLAsync(xml);
         }
 
         public static async Task<TElement> QuerySelectAsync<TElement>(this IDOMNode node, string selector) where TElement : IHTMLElement

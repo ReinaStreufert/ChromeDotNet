@@ -26,11 +26,26 @@ namespace LibChromeDotNet.HTML5.DOM
 
         private IDOMNode _Node;
         private string _Text;
+        private object _Sync = new object();
 
         public async Task SetTextAsync(string text)
         {
-            await _Node.SetInnerTextAsync(text);
-            Interlocked.Exchange(ref _Text, text);
+            for (; ;)
+            {
+                var oldNode = _Node;
+                var newNode = await _Node.SetInnerTextAsync(text);
+                lock (_Sync)
+                {
+                    if (_Node == oldNode)
+                    {
+                        _Text = text;
+                        _Node = newNode;
+                    }
+                    // in the case of concurrent calls to SetTextAsync, a previous call may replace _Node while this call awaits
+                    // the response from oldNode. this one mean the second call would likely fail and be ignored. i decided to handle this case
+                    // and restart the process if _Node was replaced by checking after acquiring the lock...
+                }
+            }
         }
 
         public ValueTask DisposeAsync() => ValueTask.CompletedTask;

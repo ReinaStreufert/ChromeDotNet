@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using System.Xml;
 
 namespace LibChromeDotNet.ChromeInterop
 {
@@ -77,6 +78,22 @@ namespace LibChromeDotNet.ChromeInterop
         {
             await _Session.RequestAsync(DOM.SetNodeValue(_NodeInfo.Id, value));
             _NodeInfo.Value = value;
+        }
+
+        public async Task<XmlDocument> GetOuterHTMLAsync()
+        {
+            var plainHTML = await _Session.RequestAsync(DOM.GetOuterHTML(_NodeInfo.Id));
+            var xmlHTML = new XmlDocument();
+            xmlHTML.LoadXml(plainHTML);
+            return xmlHTML;
+        }
+
+        public async Task<IDOMNode> ModifyOuterHTMLAsync(XmlDocument outerHTML)
+        {
+            var plainHTML = outerHTML.DocumentElement?.OuterXml ?? throw new ArgumentException($"{nameof(outerHTML)} xml has no root");
+            var newNodeId = await _Session.RequestAsync(DOM.SetOuterHTML(_NodeInfo.Id, plainHTML));
+            var newNodeTree = await _Session.RequestAsync(DOM.GetNodeTree(newNodeId, 2));
+            return new DOMNode(_Session, newNodeTree);
         }
     }
 }

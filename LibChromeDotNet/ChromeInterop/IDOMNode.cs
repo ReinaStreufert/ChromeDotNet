@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using System.Xml;
 
 namespace LibChromeDotNet.ChromeInterop
 {
@@ -19,6 +20,8 @@ namespace LibChromeDotNet.ChromeInterop
         public Task<IDOMNode> QuerySelectAsync(string selector);
         public Task<IEnumerable<IDOMNode>> GetChildrenAsync();
         public Task<IDOMNode[]> QuerySelectManyAsync(string selector);
+        public Task<XmlDocument> GetOuterHTMLAsync();
+        public Task<IDOMNode> ModifyOuterHTMLAsync(XmlDocument outerHTML);
         public Task DeleteNodeAsync();
     }
 }

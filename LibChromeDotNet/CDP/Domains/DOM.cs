@@ -10,7 +10,6 @@ namespace LibChromeDotNet.CDP.Domains
     public static class DOM
     {
         public static ICDPRequest Enable => CDP.Request("DOM.enable");
-
         public static ICDPRequest<DOMNodeInfo> GetDocument =>
             CDP.Request("DOM.getDocument", new JObject(), resultJson => new DOMNodeInfo((JObject)resultJson["root"]!));
 
@@ -62,6 +61,25 @@ namespace LibChromeDotNet.CDP.Domains
                 { "value", nodeValue }
             };
             return CDP.Request("DOM.setNodeValue", jsonParams);
+        }
+
+        public static ICDPRequest<string> GetOuterHTML(int nodeId)
+        {
+            var jsonParams = new JObject()
+            {
+                { "nodeId", nodeId }
+            };
+            return CDP.Request("DOM.getOuterHTML", jsonParams, resultJson => resultJson["outerHTML"]!.ToString());
+        }
+
+        public static ICDPRequest<int> SetOuterHTML(int nodeId, string outerHTML)
+        {
+            var jsonParams = new JObject()
+            {
+                { "nodeId", nodeId },
+                { "outerHTML", outerHTML }
+            };
+            return CDP.Request("DOM.setOuterHTML", jsonParams, resultJson => (int)resultJson["nodeId"]!);
         }
 
         public static ICDPRequest<DOMNodeTree> GetNodeTree(int rootNodeId, int depth = -1)
