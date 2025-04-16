@@ -75,7 +75,7 @@ namespace ChromeDotNet_Test
                 for (int i = 0; i < text.Length; i++)
                 {
                     var color = colors[(i + offset) % colors.Length];
-                    var style = ((i + offset) % 2 > 0) ? FontStyle.Strikethrough | FontStyle.Underline : FontStyle.Regular;
+                    var style = ((i + offset) % 2 > 0) ? FontStyle.Strikethrough : FontStyle.Regular | FontStyle.Underline;
                     var node = new FormattedTextNode(text[i].ToString(), style, color);
                     if (lastNode == null)
                         firstNode = node;
@@ -87,7 +87,7 @@ namespace ChromeDotNet_Test
                     throw new ArgumentException(nameof(text));
                 var formattedText = new FormattedText(firstNode);
                 await textElement.SetTextAsync(formattedText);
-                await Task.Delay(200);
+                await Task.Delay(100);
                 offset = (offset + 1) % colors.Length;
             }
         }

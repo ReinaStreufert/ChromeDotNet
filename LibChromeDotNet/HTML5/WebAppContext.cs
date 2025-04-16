@@ -163,13 +163,6 @@ namespace LibChromeDotNet.HTML5
                     ClosedByUser?.Invoke();
                     _Context.OnWindowClosed(this);
                 };
-                await using (var wAddEventListener = (IJSFunction)await session.EvaluateExpressionAsync("window.addEventListener"))
-                await using (var jsCallback = await session.AddJSBindingAsync((JObject o) => Interlocked.Exchange(ref _Context._FocusedWindow, this)))
-                {
-                    await wAddEventListener.CallAsync(
-                        IJSValue.FromString("focus"),
-                        jsCallback);
-                }
                 var loadTaskSource = new TaskCompletionSource();
                 session.PageLoaded += loadTaskSource.SetResult;
                 var docReadyExpr = "(function(url) { return document.URL.toLowerCase() == url.toLowerCase() && document.readyState != \"loading\" })";
@@ -179,6 +172,13 @@ namespace LibChromeDotNet.HTML5
                 if (!docReady.Value)
                     await loadTaskSource.Task;
                 session.PageLoaded -= loadTaskSource.SetResult;
+                await using (var wAddEventListener = (IJSFunction)await session.EvaluateExpressionAsync("window.addEventListener"))
+                await using (var jsCallback = await session.AddJSBindingAsync((JObject o) => Interlocked.Exchange(ref _Context._FocusedWindow, this)))
+                {
+                    await wAddEventListener.CallAsync(
+                        IJSValue.FromString("focus"),
+                        jsCallback);
+                }
                 lock (_SessionSync)
                 {
                     if (_Session != null)
