@@ -5,7 +5,9 @@ VisualStudioVersion = 17.4.33110.190
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "LibChromeDotNet", "LibChromeDotNet\LibChromeDotNet.csproj", "{F867E887-B6E5-499D-BA68-A8C10082290B}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ChromeDotNet-Test", "ChromeDotNet-Test\ChromeDotNet-Test.csproj", "{B17643D5-50CD-4006-AD94-569D67DC5B62}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ChromeDotNet-Test", "ChromeDotNet-Test\ChromeDotNet-Test.csproj", "{B17643D5-50CD-4006-AD94-569D67DC5B62}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CDN-WebAppTemplate", "CDN-WebAppTemplate\CDN-WebAppTemplate.csproj", "{8DA8BBE8-86E0-4AD4-900C-041AE0ADC201}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -21,6 +23,10 @@ Global
 		{B17643D5-50CD-4006-AD94-569D67DC5B62}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{B17643D5-50CD-4006-AD94-569D67DC5B62}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{B17643D5-50CD-4006-AD94-569D67DC5B62}.Release|Any CPU.Build.0 = Release|Any CPU
+		{8DA8BBE8-86E0-4AD4-900C-041AE0ADC201}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{8DA8BBE8-86E0-4AD4-900C-041AE0ADC201}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{8DA8BBE8-86E0-4AD4-900C-041AE0ADC201}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{8DA8BBE8-86E0-4AD4-900C-041AE0ADC201}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
