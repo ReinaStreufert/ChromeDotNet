@@ -17,15 +17,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Reference Include="LibChromeDotNet">
-      <HintPath>LibChromeDotNet.dll</HintPath>
-    </Reference>
-  </ItemGroup>
-
-  <ItemGroup>
-    <None Update="LibChromeDotNet.dll">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </None>
+    <ProjectReference Include="C:\Users\Reina\Documents\GitHub\ChromeDotNet\LibChromeDotNet\LibChromeDotNet.csproj" />
   </ItemGroup>
 
 </Project>

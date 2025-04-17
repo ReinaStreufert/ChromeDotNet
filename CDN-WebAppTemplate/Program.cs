@@ -6,7 +6,7 @@ namespace CDN_WebAppTemplate
     {
         static async Task Main(string[] args)
         {
-            await WebApp.CreateFromAssemblyManifest("web", new App().OnStartupAsync).LaunchAsync();
+            await new App().LaunchAsync();
         }
     }
 }

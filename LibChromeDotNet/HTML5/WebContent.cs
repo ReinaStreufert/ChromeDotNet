@@ -89,7 +89,7 @@ namespace LibChromeDotNet.HTML5
             foreach (var resourceName in matchingResourceNames)
             {
                 var relativeResourcePath = PathFromManifestResourceName(resourceName)
-                    .Substring(baseResourcePath.Length + 1);
+                    .Substring(baseResourcePath.TrimEnd('.').Length + 1);
                 AddManifestSource(basePath + relativeResourcePath, srcAssembly, resourceName);
             }
         }

@@ -67,12 +67,12 @@ namespace LibChromeDotNet.HTML5
                 }
                 var response = requestContext.Response;
                 var url = requestContext.Request.Url;
-                if (url == null || url.Segments.Length < 2)
+                Guid uriProviderUuid;
+                if (url == null || url.Segments.Length < 2 || !Guid.TryParse(url.Segments[1].TrimEnd('/'), out uriProviderUuid))
                 {
                     FailNotFound(response);
                     continue;
                 }
-                var uriProviderUuid = new Guid(url.Segments[1].TrimEnd('/'));
                 if (!_ContentProviderDict.TryGetValue(uriProviderUuid, out var provider))
                 {
                     FailNotFound(response);

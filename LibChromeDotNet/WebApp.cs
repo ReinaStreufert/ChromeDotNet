@@ -8,9 +8,11 @@ using System.Threading.Tasks;
 
 namespace LibChromeDotNet
 {
-    public class WebApp : IWebApp
+    public abstract class WebApp : IWebApp
     {
-        public static WebApp CreateFromAssemblyManifest(string contentSrcPath, AppLaunchAsyncHandler handler)
+        private IWebContent _Content;
+
+        protected WebApp(string contentSrcPath)
         {
             var assembly = Assembly.GetCallingAssembly();
             var rootNamespace = assembly.EntryPoint?.DeclaringType?.Namespace;
@@ -20,26 +22,16 @@ namespace LibChromeDotNet
             var content = new WebContent();
             content.AddManifestSources("/", assembly, manifestResourcePrefix);
             content.SetIndex();
-            return new WebApp(content, handler);
-
+            _Content = content;
         }
+
+        protected abstract Task OnStartupAsync(IAppContext context);
 
         IWebContent IWebApp.Content => _Content;
 
-        private WebApp(IWebContent content, AppLaunchAsyncHandler handler)
-        {
-            _Content = content;
-            _LaunchHandler = handler;
-        } 
-
-        private IWebContent _Content;
-        private AppLaunchAsyncHandler _LaunchHandler;
-
         async Task IWebApp.OnStartupAsync(IAppContext context)
         {
-            await _LaunchHandler(context);
+            await OnStartupAsync(context);
         }
     }
-
-    public delegate Task AppLaunchAsyncHandler(IAppContext context);
 }

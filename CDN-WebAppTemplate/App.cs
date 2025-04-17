@@ -1,4 +1,5 @@
-﻿using LibChromeDotNet.HTML5;
+﻿using LibChromeDotNet;
+using LibChromeDotNet.HTML5;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -7,11 +8,15 @@ using System.Threading.Tasks;
 
 namespace CDN_WebAppTemplate
 {
-    public class App
+    public class App : WebApp
     {
-        public async Task OnStartupAsync(IAppContext context)
+        public App() : base("web")
         {
-            await context.OpenWindowAsync();
+        }
+
+        protected override async Task OnStartupAsync(IAppContext context)
+        {
+            var window = await context.OpenWindowAsync();
         }
     }
 }
