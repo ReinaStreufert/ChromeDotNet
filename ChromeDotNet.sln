@@ -7,7 +7,7 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "LibChromeDotNet", "LibChrom
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ChromeDotNet-Test", "ChromeDotNet-Test\ChromeDotNet-Test.csproj", "{B17643D5-50CD-4006-AD94-569D67DC5B62}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CDN-WebAppTemplate", "CDN-WebAppTemplate\CDN-WebAppTemplate.csproj", "{8DA8BBE8-86E0-4AD4-900C-041AE0ADC201}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "CDN-WebAppTemplate", "CDN-WebAppTemplate\CDN-WebAppTemplate.csproj", "{8DA8BBE8-86E0-4AD4-900C-041AE0ADC201}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

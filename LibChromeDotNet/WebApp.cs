@@ -12,7 +12,7 @@ namespace LibChromeDotNet
     {
         private IWebContent _Content;
 
-        protected WebApp(string contentSrcPath)
+        protected WebApp(string contentSrcPath, string indexPageName)
         {
             var assembly = Assembly.GetCallingAssembly();
             var rootNamespace = assembly.EntryPoint?.DeclaringType?.Namespace;
@@ -21,7 +21,7 @@ namespace LibChromeDotNet
             var manifestResourcePrefix = $"{rootNamespace}.{contentSrcPath.TrimStart('/').Replace('/', '.')}";
             var content = new WebContent();
             content.AddManifestSources("/", assembly, manifestResourcePrefix);
-            content.SetIndex();
+            content.SetIndex(indexPageName);
             _Content = content;
         }
 

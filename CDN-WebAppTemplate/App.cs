@@ -10,7 +10,7 @@ namespace CDN_WebAppTemplate
 {
     public class App : WebApp
     {
-        public App() : base("web")
+        public App() : base("web/", "index.html")
         {
         }
 
