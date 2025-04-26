@@ -3,6 +3,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
+using System.Reflection.Metadata;
 using System.Text;
 using System.Threading.Tasks;
 
@@ -10,9 +11,9 @@ namespace LibChromeDotNet
 {
     public abstract class WebApp : IWebApp
     {
-        private IWebContent _Content;
+        private WebContent _Content;
 
-        protected WebApp(string contentSrcPath, string indexPageName)
+        protected WebApp(string contentSrcPath)
         {
             var assembly = Assembly.GetCallingAssembly();
             var rootNamespace = assembly.EntryPoint?.DeclaringType?.Namespace;
@@ -21,8 +22,13 @@ namespace LibChromeDotNet
             var manifestResourcePrefix = $"{rootNamespace}.{contentSrcPath.TrimStart('/').Replace('/', '.')}";
             var content = new WebContent();
             content.AddManifestSources("/", assembly, manifestResourcePrefix);
-            content.SetIndex(indexPageName);
+            
             _Content = content;
+        }
+
+        protected WebApp(string contentSrcPath, string indexPageName) : this(contentSrcPath)
+        {
+            _Content.SetIndex(indexPageName);
         }
 
         protected abstract Task OnStartupAsync(IAppContext context);

@@ -1,0 +1,21 @@
+﻿<webComponent name="userList" baseType="ComponentNamespace.UserList">
+  <bindings>
+    <enumeration name="Users" type="MyNamespace.User"/>
+    <!--<property>-->
+    <!--<method>-->
+  </bindings>
+  <templateBody>
+    <div class="scroll-box">
+      <enumerate enumeration="Users" each="user">
+        <substitute template="userItem">
+          <parameter name="User" substitute="user"/>
+          <eventListener event="click">
+            <handler binding="OnSelectedUserChanged">
+              <parameter name="selectedUser" substitute="user"/>
+            </handler>
+          </eventListener>
+        </substitute>
+      </enumerate>
+    </div>
+  </templateBody>
+</webComponent>

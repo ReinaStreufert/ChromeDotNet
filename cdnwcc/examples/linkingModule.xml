@@ -1,0 +1,6 @@
+﻿<linkingModule name="MyLibrary" webComponentsVersion="1.0.0">
+  <link src="/anothermodule.xml" relation="module"/>
+  <link src="/cdnwc/*.webcomponent" relation="webComponentPackage"/>
+  <link src="/cs/MyLibrary.csproj" relation="cs"/>
+  <link src="/js/*.js" relation="js"/>
+</linkingModule>

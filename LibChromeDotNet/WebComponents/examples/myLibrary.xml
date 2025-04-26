@@ -1,0 +1,4 @@
+﻿<linkGroup chromeDotNetVersion="1.0.0">
+  <link src="/*.js" relationship="jsModule"/>
+  <link src="/*.xml"/>
+</linkGroup>

@@ -9,6 +9,8 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ChromeDotNet-Test", "Chrome
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "CDN-WebAppTemplate", "CDN-WebAppTemplate\CDN-WebAppTemplate.csproj", "{8DA8BBE8-86E0-4AD4-900C-041AE0ADC201}"
 EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "cdnwcc", "cdnwcc\cdnwcc.csproj", "{55229BD4-8554-4677-A010-FC2CA13CD1A2}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -27,6 +29,10 @@ Global
 		{8DA8BBE8-86E0-4AD4-900C-041AE0ADC201}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{8DA8BBE8-86E0-4AD4-900C-041AE0ADC201}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{8DA8BBE8-86E0-4AD4-900C-041AE0ADC201}.Release|Any CPU.Build.0 = Release|Any CPU
+		{55229BD4-8554-4677-A010-FC2CA13CD1A2}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{55229BD4-8554-4677-A010-FC2CA13CD1A2}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{55229BD4-8554-4677-A010-FC2CA13CD1A2}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{55229BD4-8554-4677-A010-FC2CA13CD1A2}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
