@@ -1,4 +1,5 @@
-﻿using System;
+﻿using LibChromeDotNet.HTML5.JS;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
@@ -21,7 +22,9 @@ namespace LibChromeDotNet.WebComponents.ILGen
             var createElementMethod = typeof(XmlDocument).GetMethod(nameof(XmlDocument.CreateElement), new Type[] { typeof(string) })!;
             var elementParameter = Expression.Parameter(typeof(XmlElement));
             yield return Expression.Assign(elementParameter, Expression.Call(documentParameter, createElementMethod, Expression.Constant(tagName)));
-            var preprocessedPrototype = prototypeXml.CloneNode(false);
+            var preprocessedPrototype = (XmlElement)prototypeXml.CloneNode(false);
+            var nodeId = Identifier.New();
+            preprocessedPrototype.SetAttribute("id", nodeId);
             Expression? innerSubstitute = null;
             if (prototypeXml.HasAttribute("substitute"))
             {
@@ -40,6 +43,7 @@ namespace LibChromeDotNet.WebComponents.ILGen
                     .Where(m => m.ReturnType == typeof(void))
                     .FirstOrDefault()!;
                 yield return Expression.Call(elementParameter, innerTextSetter, Expression.Call(innerSubstitute, toStringMethod));
+
             }
             var setAttributeMethod = typeof(XmlElement).GetMethod(nameof(XmlElement.SetAttribute), new Type[] { typeof(string), typeof(string) })!;
             for (int i = 0; i < prototypeXml.Attributes.Count; i++)
@@ -63,6 +67,43 @@ namespace LibChromeDotNet.WebComponents.ILGen
             }
             var appendChildMethod = typeof(XmlElement).GetMethod(nameof(XmlElement.AppendChild))!;
             yield return Expression.Call(scope.XmlContainer, appendChildMethod, elementParameter);
+        }
+
+
+
+        public static ISubstituterBuilder EnumerateSubstituter() => new SubstituterBuilder("enumerate", EnumerateSubstituter);
+
+        private static IEnumerable<Expression> EnumerateSubstituter(XmlElement prototypeXml, ISubstituterBuilderScope scope)
+        {
+            var bindingExpression = prototypeXml.GetAttribute("enumeration");
+            var enumeration = scope.GetSubstitutionBinding(bindingExpression);
+            var getEnumeratorMethod = enumeration.Type.GetMethod(nameof(IEnumerable<object>.GetEnumerator));
+            if (getEnumeratorMethod == null)
+                throw new InvalidCastException($"Substitution expression '{bindingExpression}' of type '{enumeration.Type}' does not implement IEnumerable");
+            var enumeratorParameter = Expression.Parameter(getEnumeratorMethod.ReturnType);
+            yield return Expression.Assign(enumeratorParameter, Expression.Call(enumeration, getEnumeratorMethod));
+            var breakLabel = Expression.Label();
+            var enumeratedType = enumeration.Type.GenericTypeArguments[0];
+            var eachScopedName = prototypeXml.GetAttribute("each");
+            var currentParameter = Expression.Parameter(enumeratedType);
+            var branchedScope = scope.BranchAndSet(eachScopedName, currentParameter);
+            yield return Expression.Loop(Expression.Block(EnumerateSubstituterLoopBody(prototypeXml, scope, enumeratorParameter, currentParameter, breakLabel)));
+            yield return Expression.Label(breakLabel);
+        }
+
+        private static IEnumerable<Expression> EnumerateSubstituterLoopBody(XmlElement prototypeXml, ISubstituterBuilderScope branchedScope, ParameterExpression enumeratorParameter, ParameterExpression currentParameter, LabelTarget breakLabel)
+        {
+            IEnumerator<int> a;
+            var moveNextMethod = enumeratorParameter.Type.GetMethod(nameof(IEnumerator<object>.MoveNext))!;
+            yield return Expression.IfThen(Expression.Not(Expression.Call(enumeratorParameter, moveNextMethod)), Expression.Break(breakLabel));
+            var currentGetter = enumeratorParameter.Type.GetProperty(nameof(IEnumerator<object>.Current))!.GetAccessors()[0];
+            yield return Expression.Assign(currentParameter, Expression.Call(enumeratorParameter, currentGetter));
+            foreach (var childElement in prototypeXml.ChildNodes.OfType<XmlElement>())
+            {
+                var childBuilder = branchedScope.GetBuilderForTagName(childElement.Name);
+                foreach (var expr in childBuilder.GetExpressions(childElement, branchedScope))
+                    yield return expr;
+            }
         }
 
         public string? Name => _Name;

@@ -3,14 +3,14 @@
     <property name="User" type="MyNamespace.User"/>
   </bindings>
   <templateBody>
-    <div class="$:inline-box">
+    <div class="inline-box">
       <enumerate enumeration="Users" each="user">
         <substitute template="userItem">
           <parameter name="User" substitute="user"/>
           <eventListener event="click">
-            <handler binding="OnSelectedUserChanged">
+            <invoke binding="OnSelectedUserChanged">
               <parameter name="selectedUser" substitute="user"/>
-            </handler>
+            </invoke>
           </eventListener>
         </substitute>
       </enumerate>

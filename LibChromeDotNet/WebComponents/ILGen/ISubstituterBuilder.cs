@@ -21,10 +21,10 @@ namespace LibChromeDotNet.WebComponents.ILGen
         public ParameterExpression XmlContainer { get; }
         public void SetLocal(string name, Expression value);
         public Expression GetSubstitutionBinding(string memberExpr);
-        public ISubstituterBuilderScope Branch(ParameterExpression? xmlContainer);
-        public ISubstituterBuilderScope BranchAndSet(string name, Expression value, ParameterExpression? xmlContainer);
+        public ISubstituterBuilderScope Branch(ParameterExpression? xmlContainer = null);
+        public ISubstituterBuilderScope BranchAndSet(string name, Expression value, ParameterExpression? xmlContainer = null);
         public ISubstituterBuilder GetBuilderForTagName(string name);
     }
 
-    public delegate XmlElement Substituter(IComponentRenderContext context, object substitutionSrc);
+    public delegate XmlElement Substituter(IComponentRenderContext context, IWebComponent component);
 }

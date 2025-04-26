@@ -1,5 +1,4 @@
-﻿<webComponent name="userList" abstractType="ComponentNamespace.UserList">
-
+﻿<webComponent name="userList" bindingType="ComponentNamespace.UserList">
   <templateBody>
     <div class="scroll-box">
       <enumerate enumeration="Users" each="user">

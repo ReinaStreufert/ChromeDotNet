@@ -7,9 +7,13 @@ using System.Threading.Tasks;
 
 namespace LibChromeDotNet.WebComponents
 {
-    public interface IWebComponent
+    public interface IWebComponent : IComponentResource
     {
-        public Task SetTargetAsync(IDOMNode domNode);
-        public Task RenderAsync();
+        public Task LoadTemplateAsync(IWebTemplateSet templateSet, string templateName);
+    }
+
+    public interface IComponentResource
+    {
+        public void SubscribePropertyChanged(Action onPropertyChanged);
     }
 }
