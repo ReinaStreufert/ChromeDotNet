@@ -17,14 +17,18 @@ namespace LibChromeDotNet.HTML5
         }
 
         private IContentSource? _IndexResource;
+        private object _Sync = new object();
 
         private IContentSource? GetResource(string path)
         {
-            var trimmedPath = path.TrimStart('/');
-            var resource = _Resources
-                .Where(s => s.Path.TrimStart('/') == trimmedPath)
-                .FirstOrDefault();
-            return resource;
+            lock (_Sync)
+            {
+                var trimmedPath = path.TrimStart('/');
+                var resource = _Resources
+                    .Where(s => s.Path.TrimStart('/') == trimmedPath)
+                    .FirstOrDefault();
+                return resource;
+            }
         }
 
         public Task<IContentSource> GetIndexResourceAsync()
@@ -39,21 +43,54 @@ namespace LibChromeDotNet.HTML5
         public void SetIndex(string path = "index.html")
         {
             var resource = GetResource(path);
-            if (resource == null)
-                throw new ArgumentException($"No source has been added at the specified path");
-            _IndexResource = resource;
+            lock (_Sync)
+            {
+                if (resource == null)
+                    throw new ArgumentException($"No source has been added at the specified path");
+                _IndexResource = resource;
+            }
+        }
+
+        public void RemoveSource(string path)
+        {
+            lock (_Sync)
+            {
+                var resource = GetResource(path);
+                if (resource == null)
+                    throw new ArgumentException(nameof(path));
+                _Resources.Remove(resource);
+            }
+        }
+
+        public void RemoveSources(string basePath)
+        {
+            lock (_Sync)
+            {
+                var trimmedPath = basePath.TrimStart('/');
+                var resourcesToRemove = _Resources
+                    .Where(r => r.Path.StartsWith(trimmedPath))
+                    .ToArray();
+                foreach (var resource in resourcesToRemove)
+                    _Resources.Remove(resource);
+            }
         }
 
         public void AddSource(string path, string mimeType, string sourceText)
         {
-            _Resources.Add(new TextContentSource(path, mimeType, sourceText));
+            lock (_Sync)
+            {
+                _Resources.Add(new TextContentSource(path, mimeType, sourceText));
+            }
         }
 
         public void AddFileSource(string path, string filePath, string? mimeType = null)
         {
-            if (mimeType == null)
-                mimeType = MimeMapping.GetMimeMapping(filePath);
-            _Resources.Add(new FileContentSource(path, mimeType, filePath));
+            lock (_Sync)
+            {
+                if (mimeType == null)
+                    mimeType = MimeMapping.GetMimeMapping(filePath);
+                _Resources.Add(new FileContentSource(path, mimeType, filePath));
+            }
         }
 
         public void AddFileSources(string basePath, string baseDirectory)
@@ -77,7 +114,10 @@ namespace LibChromeDotNet.HTML5
         {
             if (mimeType == null)
                 mimeType = MimeMapping.GetMimeMapping(PathFromManifestResourceName(resourceName));
-            _Resources.Add(new ManifestContentSource(basePath, mimeType, srcAssembly, resourceName));
+            lock (_Sync)
+            {
+                _Resources.Add(new ManifestContentSource(basePath, mimeType, srcAssembly, resourceName));
+            }
         }
 
         public void AddManifestSources(string basePath, Assembly srcAssembly, string baseResourcePath)

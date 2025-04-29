@@ -11,7 +11,7 @@ namespace LibChromeDotNet
 {
     public abstract class WebApp : IWebApp
     {
-        private WebContent _Content;
+        protected WebContent Content;
 
         protected WebApp(string contentSrcPath)
         {
@@ -23,17 +23,17 @@ namespace LibChromeDotNet
             var content = new WebContent();
             content.AddManifestSources("/", assembly, manifestResourcePrefix);
             
-            _Content = content;
+            Content = content;
         }
 
         protected WebApp(string contentSrcPath, string indexPageName) : this(contentSrcPath)
         {
-            _Content.SetIndex(indexPageName);
+            Content.SetIndex(indexPageName);
         }
 
         protected abstract Task OnStartupAsync(IAppContext context);
 
-        IWebContent IWebApp.Content => _Content;
+        IWebContent IWebApp.Content => Content;
 
         async Task IWebApp.OnStartupAsync(IAppContext context)
         {
