@@ -152,7 +152,7 @@ namespace LibChromeDotNet.WebComponents.ILGen
             yield return Expression.IfThen(conditionExpr, Expression.Block(ConditionalSubstituteIfBody(prototypeXml, scope)));
             if (condition.ResourceTreeTip != null)
             {
-                foreach (var epxr in OnChangeRefresh(scope, condition.ResourceTreeTip, conditionExpr))
+                foreach (var expr in OnChangeRefresh(scope, condition.ResourceTreeTip, conditionExpr))
                     yield return expr;
             }
         }
