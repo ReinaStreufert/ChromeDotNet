@@ -12,8 +12,8 @@ namespace LibChromeDotNet.WebComponents.ILGen
     public interface IComponentRenderContext
     {
         public XmlDocument Document { get; }
-        public IWebTemplateSet TemplateSet { get; }
+        public IComponentRenderContext Branch();
         public void AddDOMAction(string elementId, Action<IDOMNode> callback);
-        public Substituter? LoadDependencySubstituter(string name);
+        public void RequestRerender();
     }
 }

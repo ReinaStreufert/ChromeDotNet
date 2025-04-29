@@ -12,6 +12,8 @@ namespace LibChromeDotNet.WebComponents
     {
         public void IncludeTemplate(XmlDocument templateDescription);
         public void IncludeTemplates(IEnumerable<XmlDocument> templateDescriptions);
+        public bool IsTemplateIncluded(string name);
+        public bool IsTemplateLoaded(string name);
         public Substituter LoadTemplate(string name);
     }
 }

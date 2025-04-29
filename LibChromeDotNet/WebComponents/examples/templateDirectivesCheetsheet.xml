@@ -1,5 +1,7 @@
 ﻿<cheetsheet>
   <!--the bindingType attribute must refer to a type that implements IWebComponent-->
+  <!--all C# types that implement IWebResource will automatically invalidate WebComponent bindings-->
+  <!--of any of the type's members-->
   
   <!--a tag which is not a template directive is included in the document-->
   <!--each attribute of the tag will be substituted if its value begins with '$:', indiciating a DotNet binding-->
@@ -10,8 +12,6 @@
   <enumerate enumeration="bindingExpression" each="scopedItemName">
     <!--all child tags will be processed normally, and included many times for each item in an enumerable type-->
     <!--child tags may substitute using the value of the current iteration item using the name specified by 'each' attribute-->
-    <!--when the enumeration element type implements IComponentResource, the individual iterations are capable of being automatically-->
-    <!--refreshed when a change is made without re-rendering all of the iterations representing items that were unchaged-->
   </enumerate>
 
   <conditional when="">
@@ -21,6 +21,31 @@
   <conditional unless="">
     <!--behavior is inverse to 'conditional when'-->
   </conditional>
+
+  <classes>
+    <!--the name of each child tag represents a css class, each child tag must have either 'when' or 'unless' attribute-->
+    <!--specifying the condition where it applies. unconditional classes are specified on the containing element's 'class' html attribute-->
+    <exampleClass when=""/>
+  </classes>
+
+  <attribute name="">
+    <!--provides the values of an attribute under different conditions. unconditional attributes are specified on the container xml element-->
+    <!--the conditions of each tag will be evaluated. the value of the first tag with a true condition is used-->
+    <value when=""></value>
+    <value unless="" substitute=""/>
+  </attribute>
+
+  <eventListener event="eventType" methodBinding="methodName">
+    <!--child tags may provide arguments to use when calling the method. methodBinding must refer to a method which is a member of bindingType-->
+    <myArgument></myArgument>
+    <myArgument value=""/>
+  </eventListener>
+
+  <myTemplate>
+    <!--substitutes a template within this template. properties for the resource type of the component may be specified as attributes-->
+    <!--just like attributes on other elements, property values may be substituted by prefixing the attribute text with $:-->
+    <!--all other child tags are appended to body of the sub component. this includes functional tags like eventListener-->
+  </myTemplate>
   
   
 </cheetsheet>

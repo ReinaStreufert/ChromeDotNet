@@ -2,14 +2,11 @@
   <templateBody>
     <div class="scroll-box">
       <enumerate enumeration="Users" each="user">
-        <substitute template="userItem">
-          <parameter name="User" substitute="user"/>
+        <userItem User="$:user">
           <eventListener event="click">
-            <handler binding="OnSelectedUserChanged">
-              <parameter name="selectedUser" substitute="user"/>
-            </handler>
+            <selectedUser substitute="user"/>
           </eventListener>
-        </substitute>
+        </userItem>
       </enumerate>
     </div>
   </templateBody>

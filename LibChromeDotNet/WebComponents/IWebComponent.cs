@@ -14,6 +14,6 @@ namespace LibChromeDotNet.WebComponents
 
     public interface IComponentResource
     {
-        public void SubscribePropertyChanged(Action onPropertyChanged);
+        public event Action? PropertyChanged;
     }
 }
