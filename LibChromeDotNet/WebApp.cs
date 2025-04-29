@@ -13,7 +13,7 @@ namespace LibChromeDotNet
     {
         protected WebContent Content;
 
-        protected WebApp(string contentSrcPath)
+        protected WebApp(string contentSrcPath, string? indexPageName = null)
         {
             var assembly = Assembly.GetCallingAssembly();
             var rootNamespace = assembly.EntryPoint?.DeclaringType?.Namespace;
@@ -22,13 +22,9 @@ namespace LibChromeDotNet
             var manifestResourcePrefix = $"{rootNamespace}.{contentSrcPath.TrimStart('/').Replace('/', '.')}";
             var content = new WebContent();
             content.AddManifestSources("/", assembly, manifestResourcePrefix);
-            
+            if (indexPageName != null)
+                content.SetIndex();
             Content = content;
-        }
-
-        protected WebApp(string contentSrcPath, string indexPageName) : this(contentSrcPath)
-        {
-            Content.SetIndex(indexPageName);
         }
 
         protected abstract Task OnStartupAsync(IAppContext context);
