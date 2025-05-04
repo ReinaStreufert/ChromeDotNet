@@ -1,14 +1,12 @@
-﻿<webComponent name="userItem" bindingResourceType="UserItemComponent" id="bed0bb5e-1eda-414f-91b6-dde5f855b57a">
-  <templateBody>
-    <div class="inline-box">
-      <enumerate enumeration="Users" each="user">
-        <substitute template="userItem">
-          <User substitute="user"/>
-          <eventListener event="click" methodBinding="SetSelectedUser">
-            <selectedUser substitute="user"/>
-          </eventListener>
-        </substitute>
-      </enumerate>
-    </div>
-  </templateBody>
-</webComponent>
+﻿<webTemplate name="userItem" bindingResourceType="UserItemComponent" id="bed0bb5e-1eda-414f-91b6-dde5f855b57a">
+  <div class="inline-box">
+    <enumerate enumeration="Users" each="user">
+      <substitute template="userItem">
+        <User substitute="user"/>
+        <eventListener event="click" methodBinding="SetSelectedUser">
+          <selectedUser substitute="user"/>
+        </eventListener>
+      </substitute>
+    </enumerate>
+  </div>
+</webTemplate>

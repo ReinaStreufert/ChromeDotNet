@@ -20,19 +20,36 @@ namespace LibChromeDotNet.WebComponents.ILGen
         public ParameterExpression ComponentRenderContext { get; }
         public ParameterExpression XmlContainer { get; }
         public string? ContainerId { get; }
-        public void SetLocal(string name, Expression value);
-        public ISubstitution GetSubstitutionBinding(string memberExpr);
+        public void SetLocalBinding(string name, ParameterExpression value);
+        public Substitution GetSubstitutionBinding(string memberExpr);
         public ISubstituterBuilderScope Branch(ParameterExpression xmlContainer, string elementId);
-        public ISubstituterBuilderScope BranchAndSet(string name, Expression value);
+        public ISubstituterBuilderScope BranchAndSet(string name, ParameterExpression value);
         public ISubstituterBuilder GetBuilderForTagName(string name);
-        public Substituter DemandDependency(string templateName);
     }
 
-    public interface ISubstitution
+    public class Substitution
     {
         public Expression ValueExpression { get; }
         public Expression? ResourceTreeTip { get; }
+
+        public Substitution(Expression valueExpression, Expression? resourceTreeTip)
+        {
+            ValueExpression = valueExpression;
+            ResourceTreeTip = resourceTreeTip;
+        }
     }
 
-    public delegate XmlElement Substituter(IComponentRenderContext context, IWebComponent component);
+    public class SubstituterInfo
+    {
+        public Type ResourceType { get; }
+        public Substituter Substituter { get; }
+
+        public SubstituterInfo(Type resourceType, Substituter substituter)
+        {
+            ResourceType = resourceType;
+            Substituter = substituter;
+        }
+    }
+
+    public delegate XmlElement Substituter(IComponentRenderContext context, IComponentResource resource);
 }

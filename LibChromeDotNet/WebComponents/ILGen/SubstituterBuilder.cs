@@ -28,7 +28,7 @@ namespace LibChromeDotNet.WebComponents.ILGen
             var preprocessedPrototype = (XmlElement)prototypeXml.CloneNode(false);
             var nodeId = Identifier.New();
             preprocessedPrototype.SetAttribute("id", nodeId);
-            ISubstitution? innerSubstitute = null;
+            Substitution? innerSubstitute = null;
             if (prototypeXml.HasAttribute("substitute"))
             {
                 var innerSubstAttr = prototypeXml.GetAttribute("substitute");
@@ -84,10 +84,11 @@ namespace LibChromeDotNet.WebComponents.ILGen
                         yield return expr;
                 }
             }
+            var branchedScope = scope.Branch(elementParameter, nodeId);
             foreach (var childElement in prototypeXml.ChildNodes.OfType<XmlElement>())
             {
                 var childBuilder = scope.GetBuilderForTagName(childElement.Name);
-                foreach (var expr in childBuilder.GetExpressions(childElement, scope.Branch(elementParameter, nodeId)))
+                foreach (var expr in childBuilder.GetExpressions(childElement, branchedScope))
                     yield return expr;
             }
             var appendChildMethod = typeof(XmlElement).GetMethod(nameof(XmlElement.AppendChild))!;
@@ -138,7 +139,7 @@ namespace LibChromeDotNet.WebComponents.ILGen
 
         private static IEnumerable<Expression> ConditionalSubstituter(XmlElement prototypeXml, ISubstituterBuilderScope scope)
         {
-            ISubstitution condition;
+            Substitution condition;
             Expression conditionExpr;
             if (prototypeXml.HasAttribute("when"))
             {
