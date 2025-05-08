@@ -7,11 +7,6 @@ using System.Threading.Tasks;
 
 namespace LibChromeDotNet.WebComponents
 {
-    public interface IWebComponent : IComponentResource
-    {
-        public Task LoadTemplateAsync(IWebTemplateSet templateSet, string templateName);
-    }
-
     public interface IComponentResource
     {
         public event Action? PropertyChanged;

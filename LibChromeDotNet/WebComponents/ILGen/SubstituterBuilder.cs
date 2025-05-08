@@ -91,7 +91,7 @@ namespace LibChromeDotNet.WebComponents.ILGen
                 foreach (var expr in childBuilder.GetExpressions(childElement, branchedScope))
                     yield return expr;
             }
-            var appendChildMethod = typeof(XmlElement).GetMethod(nameof(XmlElement.AppendChild))!;
+            var appendChildMethod = typeof(XmlNode).GetMethod(nameof(XmlNode.AppendChild))!;
             yield return Expression.Call(scope.XmlContainer, appendChildMethod, elementParameter);
         }
 
@@ -170,7 +170,7 @@ namespace LibChromeDotNet.WebComponents.ILGen
 
         private static IEnumerable<Expression> OnChangeRefresh(ISubstituterBuilderScope scope, Expression componentResource, Expression property)
         {
-            var requestRerenderMethod = typeof(IComponentRenderContext).GetMethod(nameof(IComponentRenderContext.RequestRerender))!;
+            var requestRerenderMethod = typeof(IComponentRenderContext).GetMethod(nameof(IComponentRenderContext.RequestRerenderAsync))!;
             var refreshHandler = Expression.Lambda(
                 Expression.Call(scope.ComponentRenderContext, requestRerenderMethod));
             var propChangeListenerType = typeof(PropertyChangeListener<,>).MakeGenericType(componentResource.Type, property.Type);

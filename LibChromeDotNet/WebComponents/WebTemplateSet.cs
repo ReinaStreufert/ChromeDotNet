@@ -1,9 +1,12 @@
-﻿using LibChromeDotNet.WebComponents.ILGen;
+﻿using LibChromeDotNet.ChromeInterop;
+using LibChromeDotNet.HTML5.JS;
+using LibChromeDotNet.WebComponents.ILGen;
 using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Linq;
 using System.Linq.Expressions;
+using System.Reflection;
 using System.Text;
 using System.Threading.Tasks;
 using System.Xml;
@@ -100,16 +103,13 @@ namespace LibChromeDotNet.WebComponents
         {
             var thisParameter = Expression.Parameter(bindingType);
             yield return Expression.Assign(thisParameter, Expression.Convert(resourceParameter, bindingType));
-            var documentElementParameter = Expression.Parameter(typeof(XmlElement));
+            var documentParameter = Expression.Parameter(typeof(XmlNode));
             var xmlDocumentGetter = typeof(IComponentRenderContext).GetProperty(nameof(IComponentRenderContext.Document))!
                 .GetGetMethod()!;
-            var documentElementGetter = typeof(XmlDocument).GetProperty(nameof(XmlDocument.DocumentElement))!
-                .GetGetMethod()!;
             yield return Expression.Assign(
-                documentElementParameter, 
-                Expression.Call(Expression.Call(renderContextParameter, xmlDocumentGetter), 
-                documentElementGetter));
-            var scope = new BuilderScope(this, thisParameter, renderContextParameter, documentElementParameter);
+                documentParameter,
+                Expression.Call(renderContextParameter, xmlDocumentGetter));
+            var scope = new BuilderScope(this, thisParameter, renderContextParameter, documentParameter);
             var rootBuilder = scope.GetBuilderForTagName(rootBuilderTag.Name);
             foreach (var expr in rootBuilder.GetExpressions(rootBuilderTag, scope))
                 yield return expr;
@@ -122,12 +122,12 @@ namespace LibChromeDotNet.WebComponents
             public ParameterExpression XmlContainer => _XmlContainer;
             public string? ContainerId => _ContainerId;
 
-            public BuilderScope(WebTemplateSet set, ParameterExpression thisExpr, ParameterExpression componentRenderContextExpr, ParameterExpression documentElementExpr)
+            public BuilderScope(WebTemplateSet set, ParameterExpression thisExpr, ParameterExpression componentRenderContextExpr, ParameterExpression documentExpr)
             {
                 _Set = set;
                 _ThisBinding = thisExpr;
                 _ComponentRenderContext = componentRenderContextExpr;
-                _XmlContainer = documentElementExpr;
+                _XmlContainer = documentExpr;
                 _LocalParameterScope = new Dictionary<string, ParameterExpression>();
             }
 
@@ -211,10 +211,13 @@ namespace LibChromeDotNet.WebComponents
 
             public IEnumerable<Expression> GetExpressions(XmlElement substitutionPrototype, ISubstituterBuilderScope scope)
             {
+                var documentParameter = Expression.Parameter(typeof(XmlNode));
+                var xmlDocumentGetter = typeof(IComponentRenderContext).GetProperty(nameof(IComponentRenderContext.Document))!
+                    .GetGetMethod()!;
+                yield return Expression.Assign(
+                    documentParameter,
+                    Expression.Call(scope.ComponentRenderContext, xmlDocumentGetter));
                 var substituterInfo = _Set.LoadTemplate(substitutionPrototype.Name);
-                var branchMethod = typeof(IComponentRenderContext).GetMethod(nameof(IComponentRenderContext.Branch));
-                var branchedRenderContextParameter = Expression.Parameter(typeof(IComponentRenderContext))!;
-                yield return Expression.Assign(branchedRenderContextParameter, Expression.Call(scope.ComponentRenderContext, branchMethod!));
                 var resourceType = substituterInfo.ResourceType;
                 var resourceParameter = Expression.Parameter(substituterInfo.ResourceType);
                 var resourceConstructor = resourceType.GetConstructor(new Type[] { })!;
@@ -228,8 +231,21 @@ namespace LibChromeDotNet.WebComponents
                     var propertyValue = scope.GetSubstitutionBinding(attributeNode.Value);
                     yield return Expression.Call(resourceParameter, setter, propertyValue.ValueExpression);
                 }
-                var substitutorMethod = substituterInfo.Substituter.Method;
-                yield return Expression.Call(substitutorMethod, branchedRenderContextParameter, resourceParameter);
+                var createElementMethod = typeof(XmlDocument).GetMethod(nameof(XmlDocument.CreateElement), new Type[] { typeof(string) })!;
+                var placeholderElementId = Identifier.New();
+                var placeholderParameter = Expression.Parameter(typeof(XmlElement));
+                yield return Expression.Assign(placeholderParameter, Expression.Call(documentParameter, createElementMethod, Expression.Constant("span")));
+                var setAttributeMethod = typeof(XmlElement).GetMethod(nameof(XmlElement.SetAttribute), new Type[] { typeof(string), typeof(string) })!;
+                yield return Expression.Call(placeholderParameter, setAttributeMethod, Expression.Constant("id"), Expression.Constant(placeholderElementId));
+                var appendChildMethod = typeof(XmlNode).GetMethod(nameof(XmlNode.AppendChild))!;
+                yield return Expression.Call(scope.XmlContainer, appendChildMethod, placeholderParameter);
+                var addDOMActionMethod = typeof(IComponentRenderContext).GetMethod(nameof(IComponentRenderContext.AddDOMAction));
+                var domNodeParameter = Expression.Parameter(typeof(IDOMNode));
+                var renderTemplateMethod = typeof(WebTemplateRenderer).GetMethod(nameof(WebTemplateRenderer.RenderTemplateAsync))!;
+                var domActionCallback = Expression.Lambda(
+                    Expression.Call(renderTemplateMethod, domNodeParameter, Expression.Constant(substituterInfo), resourceParameter),
+                    domNodeParameter);
+                yield return Expression.Call(scope.ComponentRenderContext, addDOMActionMethod, domActionCallback);
             }
 
             public bool IsMatchFor(string name) => _Set.IsTemplateIncluded(name);
