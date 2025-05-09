@@ -1,4 +1,5 @@
 ﻿using LibChromeDotNet.ChromeInterop;
+using LibChromeDotNet.HTML5.CSS;
 using LibChromeDotNet.HTML5.DOM;
 using LibChromeDotNet.HTML5.JS;
 using System;
@@ -165,6 +166,62 @@ namespace LibChromeDotNet.WebComponents.ILGen
                 var childBuilder = scope.GetBuilderForTagName(childElement.Name);
                 foreach (var expr in childBuilder.GetExpressions(childElement, scope))
                     yield return expr;
+            }
+        }
+
+        public static ISubstituterBuilder ClassesSubstituter() => new SubstituterBuilder("classes", ClassesSubstituter);
+
+        private static IEnumerable<Expression> ClassesSubstituter(XmlElement prototypeXml, ISubstituterBuilderScope scope)
+        {
+            if (scope.ContainerId == null)
+                throw new FormatException($"'classes' tag may not be the root tag of a template");
+            var addDOMActionMethod = typeof(IComponentRenderContext).GetMethod(nameof(IComponentRenderContext.AddDOMAction))!;
+            var conditionalClasses = prototypeXml.ChildNodes
+                .OfType<XmlElement>()
+                .Select(c => new KeyValuePair<Substitution, string>(scope.GetSubstitutionBinding(c.GetAttribute("when")), c.Name));
+            var domNodeParameter = Expression.Parameter(typeof(IDOMNode));
+            yield return Expression.Call(
+                scope.ComponentRenderContext, addDOMActionMethod,
+                Expression.Lambda(Expression.Block(ClassesDOMActionBody(conditionalClasses, scope, domNodeParameter)), domNodeParameter));
+        }
+
+        private static IEnumerable<Expression> ClassesDOMActionBody(IEnumerable<KeyValuePair<Substitution, string>> conditionalClasses, ISubstituterBuilderScope scope, ParameterExpression domNodeParameter)
+        {
+            var classListParameter = Expression.Parameter(typeof(ICSSClassList));
+            var classListTaskParameter = Expression.Parameter(typeof(Task<ICSSClassList>));
+            var getClassListAsyncMethod = typeof(CSSExtensions).GetMethod(nameof(CSSExtensions.GetClassListAsync))!;
+            yield return Expression.Assign(classListTaskParameter, Expression.Call(getClassListAsyncMethod, domNodeParameter));
+            var waitTaskMethod = typeof(Task).GetMethod(nameof(Task.Wait), new Type[] { })!;
+            yield return Expression.Call(classListTaskParameter, waitTaskMethod);
+            var taskResultGetter = typeof(Task<ICSSClassList>).GetProperty(nameof(Task<ICSSClassList>.Result))!.GetGetMethod()!;
+            yield return Expression.Assign(classListParameter, Expression.Call(classListTaskParameter, taskResultGetter));
+            var addClassMethod = typeof(ICSSClassList).GetMethod(nameof(ICSSClassList.AddAsync))!;
+            var removeClassMethod = typeof(ICSSClassList).GetMethod(nameof(ICSSClassList.RemoveAsync))!;
+            foreach (var pair in conditionalClasses)
+            {
+                var condition = pair.Key;
+                if (condition.ValueExpression.Type != typeof(bool))
+                    throw new FormatException($"Condition for class '{pair.Key}' must evaluate to a boolean type");
+                yield return Expression.IfThen(
+                    condition.ValueExpression,
+                    Expression.Call(classListParameter, addClassMethod, Expression.Constant(pair.Value)));
+                if (condition.ResourceTreeTip == null)
+                    continue;
+                var resource = condition.ResourceTreeTip;
+                var propChangeListenerType = typeof(PropertyChangeListener<,>).MakeGenericType(resource.Type, typeof(bool));
+                var createChangeListener = propChangeListenerType.GetMethod(nameof(PropertyChangeListener<IComponentResource, object>.Create))!;
+                var validateLeftProp = Expression.Parameter(typeof(bool));
+                var validateRightProp = Expression.Parameter(typeof(bool));
+                yield return Expression.Call(
+                    createChangeListener,
+                    resource,
+                    Expression.Lambda(Expression.Block(OnChangeHandlerGetPropBody(condition.ValueExpression))),
+                    Expression.Lambda(Expression.Block(OnChangeHandlerValidateBody(validateLeftProp, validateRightProp)), validateLeftProp, validateRightProp),
+                    Expression.Lambda(
+                        Expression.IfThenElse(
+                            condition.ValueExpression,
+                            Expression.Call(classListParameter, addClassMethod, Expression.Constant(pair.Value)),
+                            Expression.Call(classListParameter, removeClassMethod, Expression.Constant(pair.Value))));
             }
         }
 

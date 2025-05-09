@@ -239,7 +239,7 @@ namespace LibChromeDotNet.WebComponents
                 yield return Expression.Call(placeholderParameter, setAttributeMethod, Expression.Constant("id"), Expression.Constant(placeholderElementId));
                 var appendChildMethod = typeof(XmlNode).GetMethod(nameof(XmlNode.AppendChild))!;
                 yield return Expression.Call(scope.XmlContainer, appendChildMethod, placeholderParameter);
-                var addDOMActionMethod = typeof(IComponentRenderContext).GetMethod(nameof(IComponentRenderContext.AddDOMAction));
+                var addDOMActionMethod = typeof(IComponentRenderContext).GetMethod(nameof(IComponentRenderContext.AddDOMAction))!;
                 var domNodeParameter = Expression.Parameter(typeof(IDOMNode));
                 var renderTemplateMethod = typeof(WebTemplateRenderer).GetMethod(nameof(WebTemplateRenderer.RenderTemplateAsync))!;
                 var domActionCallback = Expression.Lambda(
