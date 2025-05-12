@@ -12,7 +12,7 @@ namespace LibChromeDotNet.HTML5.DOM
         public static KeyboardEvent KeyDown => new KeyboardEvent("keydown");
         public static KeyboardEvent KeyUp => new KeyboardEvent("keyup");
 
-        public string EventTypeName { get; }
+        public DOMEventType EventType { get; }
         public IEnumerable<string> SerializedProperties { get; } = new string[]
         {
             "altKey",
@@ -23,9 +23,9 @@ namespace LibChromeDotNet.HTML5.DOM
             "repeat"
         };
 
-        private KeyboardEvent(string name)
+        internal KeyboardEvent(DOMEventType eventType)
         {
-            EventTypeName = name;
+            EventType = eventType;
         }
 
         public KeyboardEventArgs GetParamsFromJson(JObject eventListenerArgs) => new KeyboardEventArgs(eventListenerArgs);

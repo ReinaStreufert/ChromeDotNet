@@ -30,12 +30,12 @@ namespace LibChromeDotNet.HTML5.DOM
             var jsNode = await node.GetJavascriptNodeAsync();
             await jsNode.CallFunctionAsync(
                 "addEventListener",
-                IJSValue.FromString(eventType.EventTypeName),
+                IJSValue.FromString(eventType.EventType.ToString().ToLowerInvariant()),
                 jsHandler);
-            return new EventListener(jsNode, jsHandler, eventType.EventTypeName);
+            return new EventListener(jsNode, jsHandler, eventType.EventType.ToString().ToLower());
         }
 
-        public static async Task<IAsyncDisposable> AddEventListenerAsync(this IDOMNode node, GenericDOMEvent eventType, Action callback)
+        public static async Task<IAsyncDisposable> AddEventListenerAsync(this IDOMNode node, IDOMEvent eventType, Action callback)
         {
             var session = node.Session;
             var jsBindingName = Identifier.New();
@@ -43,7 +43,7 @@ namespace LibChromeDotNet.HTML5.DOM
             var jsHandlerExpr = $"(function(e){{{jsBindingName}(JSON.stringify(e));}})";
             var jsHandler = (IJSObject)await session.EvaluateExpressionAsync(jsHandlerExpr);
             var jsNode = await node.GetJavascriptNodeAsync();
-            var eventTypeName = eventType.ToString().ToLowerInvariant();
+            var eventTypeName = eventType.EventType.ToString().ToLowerInvariant();
             await jsNode.CallFunctionAsync(
                 "addEventListener",
                 IJSValue.FromString(eventTypeName),

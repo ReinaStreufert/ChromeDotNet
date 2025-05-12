@@ -3,7 +3,7 @@
     <enumerate enumeration="Users" each="user">
       <substitute template="userItem">
         <User substitute="user"/>
-        <eventListener event="click" methodBinding="SetSelectedUser">
+        <eventListener event="click" handlerMethod="SetSelectedUser">
           <selectedUser substitute="user"/>
         </eventListener>
       </substitute>

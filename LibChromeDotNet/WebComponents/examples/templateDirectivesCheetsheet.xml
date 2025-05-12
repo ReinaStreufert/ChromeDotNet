@@ -35,16 +35,16 @@
     <value unless="" substitute=""/>
   </attribute>
 
-  <eventListener event="eventType" methodBinding="methodName">
+  <eventListener event="eventType" methodBinding="methodName" eventParams="e">
     <!--child tags may provide arguments to use when calling the method. methodBinding must refer to a method which is a member of bindingType-->
-    <myArgument></myArgument>
-    <myArgument value=""/>
+    <argument></argument>
+    <argument substitute="e"/>
   </eventListener>
 
   <myTemplate>
     <!--substitutes a template within this template. properties for the resource type of the component may be specified as attributes-->
     <!--just like attributes on other elements, property values may be substituted by prefixing the attribute text with $:-->
-    <!--all other child tags are appended to body of the sub component. this includes functional tags like eventListener-->
+    <!--functional tags like eventListener, classes, or attribute may be included as child tags-->
   </myTemplate>
   
   

@@ -221,7 +221,48 @@ namespace LibChromeDotNet.WebComponents.ILGen
                         Expression.IfThenElse(
                             condition.ValueExpression,
                             Expression.Call(classListParameter, addClassMethod, Expression.Constant(pair.Value)),
-                            Expression.Call(classListParameter, removeClassMethod, Expression.Constant(pair.Value))));
+                            Expression.Call(classListParameter, removeClassMethod, Expression.Constant(pair.Value)))));
+            }
+        }
+
+        private static IEnumerable<Expression> EventListenerSubstituter(XmlElement prototypeXml, ISubstituterBuilderScope scope)
+        {
+            var domEvent = Event.FromEventName(prototypeXml.GetAttribute("event"));
+            var eventType = domEvent.GetType();
+            var eventParamsType = eventType.IsConstructedGenericType ? eventType.GetGenericArguments()[0] : null;
+            var eventParamsParameter = eventParamsType == null ? null : Expression.Parameter(eventParamsType);
+            var branchedScope = eventParamsParameter == null ? scope : scope.BranchAndSet(prototypeXml.GetAttribute("eventParams"), eventParamsParameter);
+            var bindingInvocationArgs = BindingMethodArguments(prototypeXml.ChildNodes.OfType<XmlElement>(), branchedScope);
+            var bindingMethod = scope.This.GetType().GetMethod(prototypeXml.GetAttribute("handlerMethod"), bindingInvocationArgs
+                .Select(a => a.Type)
+                .ToArray()) ?? throw new FormatException($"");
+            var eventListenerCallback = Expression.Lambda(
+                Expression.Call(scope.This, bindingMethod, bindingInvocationArgs),
+                eventParamsParameter == null ? new ParameterExpression[0] : new ParameterExpression[] { eventParamsParameter });
+            var addEventListenerMethod = typeof(DOMExtensions).GetMethods()
+                .Where(m => m.Name == nameof(DOMExtensions.AddEventListenerAsync) && m.ContainsGenericParameters == (eventParamsType != null))
+                .First();
+            if (eventParamsType != null)
+                addEventListenerMethod = addEventListenerMethod.MakeGenericMethod(new Type[] { eventParamsType });
+            var domNodeParameter = Expression.Parameter(typeof(IDOMNode));
+            var domActionCallback = Expression.Lambda(
+                Expression.Call(addEventListenerMethod, domNodeParameter, Expression.Constant(domEvent), eventListenerCallback),
+                domNodeParameter);
+            var addDOMActionMethod = typeof(IComponentRenderContext).GetMethod(nameof(IComponentRenderContext.AddDOMAction))!;
+            var domActionTarget = scope.ContainerId ?? throw new FormatException($"Event listener element must be the child of a structural element");
+            yield return Expression.Call(scope.ComponentRenderContext, addDOMActionMethod, Expression.Constant(domActionTarget), domActionCallback);
+        }
+
+        private static IEnumerable<Expression> BindingMethodArguments(IEnumerable<XmlElement> argumentsXml, ISubstituterBuilderScope scope)
+        {
+            foreach (var argumentXml in argumentsXml)
+            {
+                if (argumentXml.Name != "argument")
+                    throw new FormatException($"Invalid child element '{argumentXml.Name}' on event listener");
+                if (argumentXml.HasAttribute("substitute"))
+                    yield return scope.GetSubstitutionBinding(argumentXml.GetAttribute("substitute")).ValueExpression;
+                else
+                    yield return Expression.Constant(argumentXml.InnerText);
             }
         }
 

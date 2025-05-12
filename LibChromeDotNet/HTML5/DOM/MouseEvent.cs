@@ -9,13 +9,7 @@ namespace LibChromeDotNet.HTML5.DOM
 {
     public class MouseEvent : IDOMEvent<MouseEventArgs>
     {
-        public static MouseEvent Click => new MouseEvent("click");
-        public static MouseEvent DoubleClick => new MouseEvent("dblclick");
-        public static MouseEvent MouseUp = new MouseEvent("mouseup");
-        public static MouseEvent MouseDown => new MouseEvent("mousedown");
-        public static MouseEvent MouseMove => new MouseEvent("mousemove"); // whoops, duh
-
-        public string EventTypeName { get; }
+        public DOMEventType EventType { get; }
         public IEnumerable<string> SerializedProperties { get; } = new string[]
         {
             "clientX",
@@ -28,9 +22,9 @@ namespace LibChromeDotNet.HTML5.DOM
             "screenY"
         };
 
-        private MouseEvent(string eventTypeName)
+        internal MouseEvent(DOMEventType eventType)
         {
-            EventTypeName = eventTypeName;
+            EventType = eventType;
         }
 
         public MouseEventArgs GetParamsFromJson(JObject eventListenerArgs)
