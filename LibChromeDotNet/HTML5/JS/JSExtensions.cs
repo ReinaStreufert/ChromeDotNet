@@ -40,63 +40,59 @@ namespace LibChromeDotNet.HTML5.JS
                 return (IJSFunction)await jsBindingFactory.CallAsync(strJsBinding);
         }
 
-        // also these, im dumb asf
-        public static async Task<IJSGetter> BindGetterAsync(this IJSObject obj, string propIndex)
+        public static async Task<IJSObjectBinding> BindAsync(this IJSObject obj)
         {
             var session = obj.Session;
-            var getterFactoryExpr = "(function(obj, propIndex){ return (function(){ return obj[propIndex]; }); })";
+            var getterFactoryExpr = "(function(obj){ return (function(propIndex){ return obj[propIndex]; }); })";
+            var setterFactoryExpr = "(function(obj){ return (function(propIndex, value){ obj[propIndex] = value; }); })";
             await using (var getterFactory = (IJSFunction)await session.EvaluateExpressionAsync(getterFactoryExpr))
-            {
-                var getterFunc = await getterFactory.CallAsync(obj, IJSValue.FromString(propIndex));
-                return new JSGetter((IJSFunction)getterFunc);
-            }
-        }
-
-        public static async Task<IJSSetter> BindSetterAsync(this IJSObject obj, string propIndex)
-        {
-            var session = obj.Session;
-            var setterFactoryExpr = "(function(obj, propIndex){ return (function(value){ obj[propIndex] = value; }); })";
             await using (var setterFactory = (IJSFunction)await session.EvaluateExpressionAsync(setterFactoryExpr))
             {
-                var setterFunc = await setterFactory.CallAsync(obj, IJSValue.FromString(propIndex));
-                return new JSSetter((IJSFunction)setterFunc);
+                var getterFunc = (IJSFunction)await getterFactory.CallAsync(obj);
+                var setterFunc = (IJSFunction)await setterFactory.CallAsync(obj);
+                return new JSObjectBinding(getterFunc, setterFunc);
             }
         }
 
-        private class JSGetter : IJSGetter
+        private class JSObjectBinding : IJSObjectBinding
         {
             private IJSFunction _GetterFunc;
-
-            public JSGetter(IJSFunction getterFunc)
-            {
-                _GetterFunc = getterFunc;
-            }
-
-            public ValueTask DisposeAsync() => _GetterFunc.DisposeAsync();
-            public async Task<IJSValue> GetValueAsync() => await _GetterFunc.CallAsync();
-        }
-
-        private class JSSetter : IJSSetter
-        {
             private IJSFunction _SetterFunc;
 
-            public JSSetter(IJSFunction setterFunc)
+            public JSObjectBinding(IJSFunction getterFunc, IJSFunction setterFunc)
             {
+                _GetterFunc = getterFunc;
                 _SetterFunc = setterFunc;
             }
 
-            public ValueTask DisposeAsync() => _SetterFunc.DisposeAsync();
-            public async Task SetValueAsync(IJSValue value) => await _SetterFunc.CallAsync(value);
+            public async Task<IJSValue> CallPropertyAsync(string key, params IJSValue[] args)
+            {
+                var callTarget = (IJSFunction)await _GetterFunc.CallAsync(IJSValue.FromString(key));
+                return await callTarget.CallAsync(args);
+            }
+
+            public async Task<IJSValue> GetAsync(string key)
+            {
+                return await _GetterFunc.CallAsync(IJSValue.FromString(key));
+            }
+
+            public async Task SetAsync(string key, IJSValue value)
+            {
+                await _SetterFunc.CallAsync(IJSValue.FromString(key), value);
+            }
+
+            public async ValueTask DisposeAsync()
+            {
+                await _GetterFunc.DisposeAsync();
+                await _SetterFunc.DisposeAsync();
+            }
         }
     }
 
-    public interface IJSGetter : IAsyncDisposable
+    public interface IJSObjectBinding : IAsyncDisposable
     {
-        Task<IJSValue> GetValueAsync();
-    }
-
-    public interface IJSSetter : IAsyncDisposable
-    {
-        Task SetValueAsync(IJSValue value);
+        public Task<IJSValue> GetAsync(string key);
+        public Task SetAsync(string key, IJSValue value);
+        public Task<IJSValue> CallPropertyAsync(string key, params IJSValue[] args); // javascript is silly
     }
 }

@@ -13,9 +13,9 @@ namespace LibChromeDotNet.HTML5.CSS
         public static async Task<ICSSClassList> GetClassListAsync(this IDOMNode node)
         {
             await using (var jsNode = await node.GetJavascriptNodeAsync())
-            await using (var getter = await jsNode.BindGetterAsync("classList"))
+            await using (var binding = await jsNode.BindAsync())
             {
-                var jsClassList = (IJSObject)await getter.GetValueAsync();
+                var jsClassList = (IJSObject)await binding.GetAsync("classList");
                 return new ClassList(jsClassList);
             }
         }

@@ -13,18 +13,13 @@ namespace LibChromeDotNet.HTML5.DOM
         public static async Task<HTMLInputElement> FromDOMNodeAsync(IDOMNode node)
         {
             var session = node.Session;
-            IJSGetter valueGetter;
-            IJSSetter valueSetter;
+            IJSObjectBinding binding;
             await using (var jsNode = await node.GetJavascriptNodeAsync())
-            {
-                valueGetter = await jsNode.BindGetterAsync("value");
-                valueSetter = await jsNode.BindSetterAsync("value");
-            }
-            string initialValue = (await valueGetter.GetValueAsync()).ToString()!;
+                binding = await jsNode.BindAsync();
+            string initialValue = (await binding.GetAsync("value")).ToString()!;
             var result = new HTMLInputElement();
             result._Node = node;
-            result._ValueGetter = valueGetter;
-            result._ValueSetter = valueSetter;
+            result._Binding = binding;
             result._Value = initialValue;
             result._ChangeEventListener = await node.AddEventListenerAsync(Event.KeyDown, e => _ = result.OnValueChangedAsync(e));
             return result;
@@ -43,17 +38,16 @@ namespace LibChromeDotNet.HTML5.DOM
 
         private IDOMNode _Node;
         private IAsyncDisposable _ChangeEventListener;
-        private IJSGetter _ValueGetter;
-        private IJSSetter _ValueSetter;
+        private IJSObjectBinding _Binding;
         private string _Value;
 
-        public async Task SetValueAsync(string value) => await _ValueSetter.SetValueAsync(IJSValue.FromString(value));
+        public async Task SetValueAsync(string value) => await _Binding.SetAsync("value", IJSValue.FromString(value));
         private async Task OnValueChangedAsync(KeyboardEventArgs e)
         {
             await using (var jsNode = await _Node.GetJavascriptNodeAsync())
             {
                 var oldValue = _Value;
-                var newValue = (await _ValueGetter.GetValueAsync()).ToString()!;
+                var newValue = (await _Binding.GetAsync("value")).ToString()!;
                 if (oldValue != newValue)
                 {
                     Interlocked.Exchange(ref _Value, newValue);
@@ -65,8 +59,7 @@ namespace LibChromeDotNet.HTML5.DOM
         public async ValueTask DisposeAsync()
         {
             await _ChangeEventListener.DisposeAsync();
-            await _ValueGetter.DisposeAsync();
-            await _ValueSetter.DisposeAsync();
+            await _Binding.DisposeAsync();
         }
     }
 }
