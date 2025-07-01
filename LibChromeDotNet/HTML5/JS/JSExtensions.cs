@@ -35,7 +35,7 @@ namespace LibChromeDotNet.HTML5.JS
         public static async Task<IJSFunction> AddJSBindingAsync(this IInteropSession session, Action callback)
         {
             var strJsBinding = await session.AddJSBindingAsync((string s) => callback());
-            const string jsBindingFactoryExpr = "(function(strBinding){ return function(){ stringBinding(\"\"); } })";
+            const string jsBindingFactoryExpr = "(function(strBinding){ return function(){ strBinding(\"\"); } })";
             await using (var jsBindingFactory = (IJSFunction)await session.EvaluateExpressionAsync(jsBindingFactoryExpr))
                 return (IJSFunction)await jsBindingFactory.CallAsync(strJsBinding);
         }
