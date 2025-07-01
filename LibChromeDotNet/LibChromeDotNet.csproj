@@ -1,13 +1,25 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFramework>net7.0</TargetFramework>
+    <TargetFramework>net9.0</TargetFramework>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
   </PropertyGroup>
 
   <ItemGroup>
+    <Compile Remove="WebComponents\**" />
+    <EmbeddedResource Remove="WebComponents\**" />
+    <None Remove="WebComponents\**" />
+  </ItemGroup>
+
+  <ItemGroup>
     <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Reference Include="AssemblyGen">
+      <HintPath>..\..\AssemblyGen\AssemblyGen\AssemblyGen\bin\Debug\net9.0\AssemblyGen.dll</HintPath>
+    </Reference>
   </ItemGroup>
 
 </Project>

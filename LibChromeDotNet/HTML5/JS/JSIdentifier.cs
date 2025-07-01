@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace LibChromeDotNet.HTML5.JS
 {
-    public static class Identifier
+    public static class JSIdentifier
     {
         private const int Length = 16;
         private const char Min = 'a';

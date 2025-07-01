@@ -16,7 +16,7 @@ namespace LibChromeDotNet.HTML5.JS
         // just implement it like this in the first place which would be you know good.
         public static async Task<IJSFunction> AddJSBindingAsync(this IInteropSession session, Action<string> callback)
         {
-            var bindingTempName = Identifier.New();
+            var bindingTempName = JSIdentifier.New();
             await session.AddJSBindingAsync(bindingTempName, callback);
             var result = (IJSFunction)await session.EvaluateExpressionAsync(bindingTempName);
             await session.EvaluateExpressionAsync($"delete {bindingTempName};");
@@ -28,6 +28,14 @@ namespace LibChromeDotNet.HTML5.JS
         {
             var strJsBinding = await session.AddJSBindingAsync((string s) => jsonCallback(JObject.Parse(s)));
             const string jsBindingFactoryExpr = "(function(strBinding){ return (function(p){ strBinding(JSON.stringify(p)); }) })";
+            await using (var jsBindingFactory = (IJSFunction)await session.EvaluateExpressionAsync(jsBindingFactoryExpr))
+                return (IJSFunction)await jsBindingFactory.CallAsync(strJsBinding);
+        }
+
+        public static async Task<IJSFunction> AddJSBindingAsync(this IInteropSession session, Action callback)
+        {
+            var strJsBinding = await session.AddJSBindingAsync((string s) => callback());
+            const string jsBindingFactoryExpr = "(function(strBinding){ return function(){ stringBinding(\"\"); } })";
             await using (var jsBindingFactory = (IJSFunction)await session.EvaluateExpressionAsync(jsBindingFactoryExpr))
                 return (IJSFunction)await jsBindingFactory.CallAsync(strJsBinding);
         }

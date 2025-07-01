@@ -120,9 +120,7 @@ namespace LibChromeDotNet.HTML5
 
             public Uri GetContentUri(string contentPath)
             {
-                if (!contentPath.StartsWith("/"))
-                    contentPath = "/" + contentPath;
-                return new Uri($"http://localhost:{_Host._Port}/{_Uuid}" + contentPath);
+                return new Uri($"http://localhost:{_Host._Port}/{_Uuid}/" + contentPath.TrimStart('/'));
             }
 
             public void Dispose()

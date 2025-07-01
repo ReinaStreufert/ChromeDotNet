@@ -1,4 +1,5 @@
-﻿using System;
+﻿using AssemblyGen;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
@@ -11,32 +12,28 @@ namespace LibChromeDotNet.WebComponents.ILGen
     public interface ISubstituterBuilder
     {
         public bool IsMatchFor(string name);
-        public IEnumerable<Expression> GetExpressions(XmlElement substitutionPrototype, ISubstituterBuilderScope builderScope);
+        public void Build(XmlElement substitutionPrototype, ISubstituterBuilderScope builderScope);
     }
 
     public interface ISubstituterBuilderScope
     {
-        public ParameterExpression This { get; }
-        public ParameterExpression ComponentRenderContext { get; }
-        public ParameterExpression XmlContainer { get; }
+        public IMethodGeneratorContext GeneratorContext { get; }
+        public Symbol This { get; }
+        public Symbol ComponentRenderContext { get; }
+        public Symbol XmlContainer { get; }
         public string? ContainerId { get; }
-        public void SetLocalBinding(string name, ParameterExpression value);
-        public Substitution GetSubstitutionBinding(string memberExpr);
-        public ISubstituterBuilderScope Branch(ParameterExpression xmlContainer, string elementId);
-        public ISubstituterBuilderScope BranchAndSet(string name, ParameterExpression value);
+        public void SetLocalBinding(string name, AssignableSymbol value);
+        public ISubstitution GetSubstitutionBinding(string memberExpr);
+        public ISubstituterBuilderScope Branch(AssignableSymbol xmlContainer, string elementId);
+        public ISubstituterBuilderScope BranchAndSet(string name, AssignableSymbol value);
         public ISubstituterBuilder GetBuilderForTagName(string name);
     }
 
-    public class Substitution
+    public interface ISubstitution
     {
-        public Expression ValueExpression { get; }
-        public Expression? ResourceTreeTip { get; }
-
-        public Substitution(Expression valueExpression, Expression? resourceTreeTip)
-        {
-            ValueExpression = valueExpression;
-            ResourceTreeTip = resourceTreeTip;
-        }
+        public LocalSymbol? ResourceTreeTip { get; }
+        public Symbol GetValueSymbolic();
+        public Type Type { get; }
     }
 
     public class SubstituterInfo
@@ -51,5 +48,5 @@ namespace LibChromeDotNet.WebComponents.ILGen
         }
     }
 
-    public delegate XmlElement Substituter(IComponentRenderContext context, IComponentResource resource);
+    public delegate void Substituter(IComponentRenderContext context, IComponentResource resource);
 }

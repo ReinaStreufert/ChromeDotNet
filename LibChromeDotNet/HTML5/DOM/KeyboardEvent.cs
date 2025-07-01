@@ -9,9 +9,6 @@ namespace LibChromeDotNet.HTML5.DOM
 {
     public class KeyboardEvent : IDOMEvent<KeyboardEventArgs>
     {
-        public static KeyboardEvent KeyDown => new KeyboardEvent("keydown");
-        public static KeyboardEvent KeyUp => new KeyboardEvent("keyup");
-
         public DOMEventType EventType { get; }
         public IEnumerable<string> SerializedProperties { get; } = new string[]
         {

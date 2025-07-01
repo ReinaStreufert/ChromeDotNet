@@ -4,23 +4,23 @@
   <!--of any of the type's members-->
   
   <!--a tag which is not a template directive is included in the document-->
-  <!--each attribute of the tag will be substituted if its value begins with '$:', indiciating a DotNet binding-->
+  <!--each attribute of the tag will be substituted if its value begins with '=', indiciating a DotNet binding-->
   <!--the special attribute 'substitute' indicates a DotNet binding with which to substitute the inner text of the element-->
   
   <!--the directives below alter substitution behavior of the tag itself and child tags-->
   
-  <enumerate enumeration="bindingExpression" each="scopedItemName">
+  <basetag.enumerate enumeration="bindingExpression" each="scopedItemName">
     <!--all child tags will be processed normally, and included many times for each item in an enumerable type-->
     <!--child tags may substitute using the value of the current iteration item using the name specified by 'each' attribute-->
-  </enumerate>
+  </basetag.enumerate>
 
-  <conditional when="">
+  <basetag.conditional when="">
     <!--all child tags will be processed normally and included if the DotNet binding indicated by 'when' attribute is true-->
-  </conditional>
+  </basetag.conditional>
   
-  <conditional unless="">
+  <basetag.conditional unless="">
     <!--behavior is inverse to 'conditional when'-->
-  </conditional>
+  </basetag.conditional>
 
   <classes>
     <!--the name of each child tag represents a css class, each child tag must have either 'when' or 'unless' attribute-->

@@ -111,7 +111,7 @@ namespace LibChromeDotNet.WebComponents
                 Expression.Call(renderContextParameter, xmlDocumentGetter));
             var scope = new BuilderScope(this, thisParameter, renderContextParameter, documentParameter);
             var rootBuilder = scope.GetBuilderForTagName(rootBuilderTag.Name);
-            foreach (var expr in rootBuilder.GetExpressions(rootBuilderTag, scope))
+            foreach (var expr in rootBuilder.Build(rootBuilderTag, scope))
                 yield return expr;
         }
 
@@ -209,7 +209,7 @@ namespace LibChromeDotNet.WebComponents
 
             private WebTemplateSet _Set;
 
-            public IEnumerable<Expression> GetExpressions(XmlElement substitutionPrototype, ISubstituterBuilderScope scope)
+            public IEnumerable<Expression> Build(XmlElement substitutionPrototype, ISubstituterBuilderScope scope)
             {
                 var documentParameter = Expression.Parameter(typeof(XmlNode));
                 var xmlDocumentGetter = typeof(IComponentRenderContext).GetProperty(nameof(IComponentRenderContext.Document))!
@@ -229,10 +229,10 @@ namespace LibChromeDotNet.WebComponents
                     var setter = property.GetSetMethod()
                         ?? throw new ArgumentException($"template property '{property.DeclaringType}.{property.Name}' has no public set accessor");
                     var propertyValue = scope.GetSubstitutionBinding(attributeNode.Value);
-                    yield return Expression.Call(resourceParameter, setter, propertyValue.ValueExpression);
+                    yield return Expression.Call(resourceParameter, setter, propertyValue.Value);
                 }
                 var createElementMethod = typeof(XmlDocument).GetMethod(nameof(XmlDocument.CreateElement), new Type[] { typeof(string) })!;
-                var placeholderElementId = Identifier.New();
+                var placeholderElementId = JSIdentifier.New();
                 var placeholderParameter = Expression.Parameter(typeof(XmlElement));
                 yield return Expression.Assign(placeholderParameter, Expression.Call(documentParameter, createElementMethod, Expression.Constant("span")));
                 var setAttributeMethod = typeof(XmlElement).GetMethod(nameof(XmlElement.SetAttribute), new Type[] { typeof(string), typeof(string) })!;

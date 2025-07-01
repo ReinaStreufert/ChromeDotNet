@@ -11,8 +11,15 @@ namespace LibChromeDotNet.WebComponents.ILGen
 {
     public interface IComponentRenderContext
     {
-        public XmlDocument Document { get; }
-        public void AddDOMAction(string elementId, Action<IDOMNode> callback);
-        public Task RequestRerenderAsync();
+        public IElementRenderer CreateElement(bool root);
+    }
+
+    public interface IElementRenderer
+    {
+        public string Name { get; set; }
+        public string InnerText { get; set; }
+        public void SetAttribute(string name, string value);
+        public void SetChildren(IEnumerable<IElementRenderer> children);
+        public void AddDOMInitializer(Action<IDOMNode> callback);
     }
 }

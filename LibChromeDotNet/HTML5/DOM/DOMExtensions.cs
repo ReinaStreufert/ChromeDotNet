@@ -15,7 +15,7 @@ namespace LibChromeDotNet.HTML5.DOM
         public static async Task<IAsyncDisposable> AddEventListenerAsync<TParams>(this IDOMNode node, IDOMEvent<TParams> eventType, Action<TParams> callback)
         {
             var session = node.Session;
-            var jsBindingName = Identifier.New();
+            var jsBindingName = JSIdentifier.New();
             await session.AddJSBindingAsync(jsBindingName, (bindingArg) =>
             {
                 var eventArgJson = JObject.Parse(bindingArg);
@@ -38,7 +38,7 @@ namespace LibChromeDotNet.HTML5.DOM
         public static async Task<IAsyncDisposable> AddEventListenerAsync(this IDOMNode node, IDOMEvent eventType, Action callback)
         {
             var session = node.Session;
-            var jsBindingName = Identifier.New();
+            var jsBindingName = JSIdentifier.New();
             await session.AddJSBindingAsync(jsBindingName, (bindingArg) => callback());
             var jsHandlerExpr = $"(function(e){{{jsBindingName}(JSON.stringify(e));}})";
             var jsHandler = (IJSObject)await session.EvaluateExpressionAsync(jsHandlerExpr);

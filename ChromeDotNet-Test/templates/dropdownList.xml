@@ -1,0 +1,5 @@
+﻿<template name="dropdownList" bindingType="DropdownList">
+  <div class="verticalList">
+    <div class="option"></div>
+  </div>
+</template>

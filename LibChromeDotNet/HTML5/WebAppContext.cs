@@ -5,6 +5,7 @@ using LibChromeDotNet.HTML5.JS;
 using Newtonsoft.Json.Linq;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -118,7 +119,7 @@ namespace LibChromeDotNet.HTML5
                     return;
                 var session = await socket.OpenSessionAsync(target);
                 window.SetSession(session);
-                //await socket.EnableTargetDiscoveryAsync(async t => await OnTargetDiscoveredAsync(socket, t));
+                await socket.EnableTargetDiscoveryAsync(async t => await OnTargetDiscoveredAsync(socket, t));
             }
         }
 
@@ -196,7 +197,7 @@ namespace LibChromeDotNet.HTML5
                     throw new InvalidOperationException("call WaitForSession");
                 var jsWindowOpenExpr = "(function(url,name){ window.open(url, name, \"popup=true,noopener=true,noreferrer=true\"); })"; // random popup names ensure a new window is always generated.
                 await using (var jsWindowOpenFunc = (IJSFunction)await _Session.EvaluateExpressionAsync(jsWindowOpenExpr))
-                    await jsWindowOpenFunc.CallAsync(IJSValue.FromString(url.ToString()), IJSValue.FromString(Identifier.New()));
+                    await jsWindowOpenFunc.CallAsync(IJSValue.FromString(url.ToString()), IJSValue.FromString(JSIdentifier.New()));
             }
 
             public async Task CloseAsync()
@@ -228,6 +229,53 @@ namespace LibChromeDotNet.HTML5
                 var navTask = _Session.NavigatePageAsync(_ContentProvider.GetContentUri(contentPath));
                 Interlocked.Exchange(ref _CurrentContentPath, contentPath);
                 await navTask;
+            }
+
+            public async Task<IJSValue> EvaluateJSExpressionAsync(string expr)
+            {
+                if (_IsClosed)
+                    throw new InvalidOperationException("Window is closed");
+                if (_Session == null)
+                    throw new InvalidOperationException("call WaitForSession");
+                return await _Session.EvaluateExpressionAsync(expr);
+            }
+
+            public async Task<IJSFunction> AddJSBindingAsync(Action<string> callback)
+            {
+                if (_IsClosed)
+                    throw new InvalidOperationException("Window is closed");
+                if (_Session == null)
+                    throw new InvalidOperationException("call WaitForSession");
+                return await _Session.AddJSBindingAsync(callback);
+            }
+
+            public async Task<IJSFunction> AddJSBindingAsync(Action<JObject> callback)
+            {
+                if (_IsClosed)
+                    throw new InvalidOperationException("Window is closed");
+                if (_Session == null)
+                    throw new InvalidOperationException("call WaitForSession");
+                return await _Session.AddJSBindingAsync(callback);
+            }
+
+            public async Task<IJSFunction> AddJSBindingAsync(Action callback)
+            {
+                if (_IsClosed)
+                    throw new InvalidOperationException("Window is closed");
+                if (_Session == null)
+                    throw new InvalidOperationException("call WaitForSession");
+                return await _Session.AddJSBindingAsync(callback);
+            }
+
+            public async Task<AwaitableJSBinding> AddJSAwaitableBindingAsync()
+            {
+                var tcs = new TaskCompletionSource();
+                var jsSignal = await AddJSBindingAsync(() => tcs.SetResult());
+                return new AwaitableJSBinding
+                {
+                    CompletionSignal = jsSignal,
+                    Task = tcs.Task
+                };
             }
         }
     }

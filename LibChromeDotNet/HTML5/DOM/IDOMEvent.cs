@@ -33,6 +33,7 @@ namespace LibChromeDotNet.HTML5.DOM
         MouseMove,
         KeyDown,
         KeyUp,
-        Change
+        Change,
+        Resize
     }
 }

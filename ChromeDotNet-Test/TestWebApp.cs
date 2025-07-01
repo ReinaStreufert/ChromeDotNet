@@ -49,7 +49,7 @@ namespace ChromeDotNet_Test
                 CSSColor.FromRGBA(0.7f, 0f, 1f) // purple
             };
 
-            await toggleColorsButton.AddEventListenerAsync(MouseEvent.Click, e =>
+            await toggleColorsButton.AddEventListenerAsync(Event.Click, e =>
             {
                 lock (_Sync)
                 {

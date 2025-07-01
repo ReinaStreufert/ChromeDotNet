@@ -9,7 +9,7 @@ namespace LibChromeDotNet.WebComponents.ILGen
 {
     public class PropertyChangeListener<TResource, TProperty> where TResource : IComponentResource
     {
-        public static PropertyChangeListener<TResource, TProperty> Create(TResource resource, Func<TProperty> getProperty, Func<TProperty, TProperty, bool> validateProperty, Action onValueChanged)
+        public static PropertyChangeListener<TResource, TProperty> Create(TResource resource, Func<TProperty> getProperty, Func<TProperty, TProperty, bool> validateProperty, Action<TProperty> onValueChanged)
         {
             // validateProperty should return true if the arguments are the same. == operator is unsafe to use on generic parameters
             var listener = new PropertyChangeListener<TResource, TProperty>(getProperty());
@@ -25,7 +25,7 @@ namespace LibChromeDotNet.WebComponents.ILGen
                     listener._LastValue = newValue;
                 }
                 if (!validateProperty(oldValue, newValue))
-                    onValueChanged();
+                    onValueChanged(newValue);
             };
             return listener;
         }

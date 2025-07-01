@@ -26,7 +26,7 @@ namespace LibChromeDotNet.HTML5.DOM
             result._ValueGetter = valueGetter;
             result._ValueSetter = valueSetter;
             result._Value = initialValue;
-            result._ChangeEventListener = await node.AddEventListenerAsync(KeyboardEvent.KeyDown, e => _ = result.OnValueChangedAsync(e));
+            result._ChangeEventListener = await node.AddEventListenerAsync(Event.KeyDown, e => _ = result.OnValueChangedAsync(e));
             return result;
         }
 

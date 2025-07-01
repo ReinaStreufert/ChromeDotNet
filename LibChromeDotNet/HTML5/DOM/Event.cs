@@ -16,6 +16,7 @@ namespace LibChromeDotNet.HTML5.DOM
         public static KeyboardEvent KeyDown => new KeyboardEvent(DOMEventType.KeyDown);
         public static KeyboardEvent KeyUp => new KeyboardEvent(DOMEventType.KeyUp);
         public static Event Change => new Event(DOMEventType.Change);
+        public static Event Resize => new Event(DOMEventType.Resize);
 
         public static IDOMEvent FromEventType(DOMEventType eventType)
         {
@@ -29,6 +30,7 @@ namespace LibChromeDotNet.HTML5.DOM
                 DOMEventType.KeyDown => KeyDown,
                 DOMEventType.KeyUp => KeyUp,
                 DOMEventType.Change => Change,
+                DOMEventType.Resize => Resize,
                 _ => throw new NotImplementedException()
             };
         }
