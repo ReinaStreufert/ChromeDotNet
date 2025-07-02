@@ -44,15 +44,18 @@ namespace LibChromeDotNet.HTML5.DOM
         public async Task SetValueAsync(string value) => await _Binding.SetAsync("value", IJSValue.FromString(value));
         private async Task OnValueChangedAsync(KeyboardEventArgs e)
         {
-            await using (var jsNode = await _Node.GetJavascriptNodeAsync())
+            if (e.Key == null)
+                return;
+            var oldValue = _Value;
+            var isBackspace = e.Key == "Backspace";
+            var keyModifiesText = e.Key.Length == 1 || (isBackspace && oldValue.Length > 0);
+            if (!keyModifiesText)
+                return;
+            var newValue = (await _Binding.GetAsync("value")).ToString()!;
+            if (oldValue != newValue)
             {
-                var oldValue = _Value;
-                var newValue = (await _Binding.GetAsync("value")).ToString()!;
-                if (oldValue != newValue)
-                {
-                    Interlocked.Exchange(ref _Value, newValue);
-                    ValueChanged?.Invoke();
-                }
+                Interlocked.Exchange(ref _Value, newValue);
+                ValueChanged?.Invoke();
             }
         }
 

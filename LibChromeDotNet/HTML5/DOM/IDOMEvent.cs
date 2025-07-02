@@ -31,6 +31,7 @@ namespace LibChromeDotNet.HTML5.DOM
         MouseUp,
         MouseDown,
         MouseMove,
+        Wheel,
         KeyDown,
         KeyUp,
         Change,

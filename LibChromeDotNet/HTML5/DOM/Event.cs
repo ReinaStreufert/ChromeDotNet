@@ -13,6 +13,7 @@ namespace LibChromeDotNet.HTML5.DOM
         public static MouseEvent MouseUp = new MouseEvent(DOMEventType.MouseUp);
         public static MouseEvent MouseDown => new MouseEvent(DOMEventType.MouseDown);
         public static MouseEvent MouseMove => new MouseEvent(DOMEventType.MouseMove); // whoops, duh
+        public static WheelEvent Wheel => new WheelEvent();
         public static KeyboardEvent KeyDown => new KeyboardEvent(DOMEventType.KeyDown);
         public static KeyboardEvent KeyUp => new KeyboardEvent(DOMEventType.KeyUp);
         public static Event Change => new Event(DOMEventType.Change);

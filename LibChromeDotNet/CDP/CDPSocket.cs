@@ -68,7 +68,7 @@ namespace LibChromeDotNet.CDP
                 var msgObject = await ReceiveRawAsync(cancelToken);
                 cancelToken.ThrowIfCancellationRequested();
                 //Console.Write($"Message received: {msgObject}");
-                if (msgObject.ContainsKey("id"))
+                if (msgObject.ContainsKey("id")) // this is the problem
                 {
                     var msgId = (int)msgObject["id"]!;
                     var resultObject = (JObject)msgObject["result"]!;
