@@ -1,6 +1,7 @@
 ﻿using Newtonsoft.Json.Linq;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Net.WebSockets;
 using System.Text;
@@ -20,7 +21,7 @@ namespace LibChromeDotNet.CDP
         }
 
         private byte[] _ReceiveBuffer;
-        private Random _Rand = new Random();
+        private IdContext _IdContext = new IdContext();
         private LockedList<PendingSentRequest> _PendingRequests = new LockedList<PendingSentRequest>();
         private LockedList<IEventSubscription> _EventSubscriptions = new LockedList<IEventSubscription>();
         private object _SendSync = new object();
@@ -40,17 +41,17 @@ namespace LibChromeDotNet.CDP
 
         public async Task RequestAsync(ICDPRequest message, string? sessionId = null)
         {
-            var msgId = _Rand.Next();
+            var msgId = _IdContext.Next();
             await SendMessageAsync(msgId, message, sessionId);
         }
 
         public async Task<TResult> RequestAsync<TResult>(ICDPRequest<TResult> message, string? sessionId)
         {
-            var msgId = _Rand.Next();
+            var msgId = _IdContext.Next();
             var pendingSentRequest = new PendingSentRequest(msgId);
             _PendingRequests.Acquire(l => l.Add(pendingSentRequest));
             await SendMessageAsync(msgId, message, sessionId);
-            var resultObject = pendingSentRequest.WaitForResponse();
+            var resultObject = pendingSentRequest.WaitForResult();
             return message.GetResultFromJson(resultObject);
         }
 
@@ -67,12 +68,10 @@ namespace LibChromeDotNet.CDP
             {
                 var msgObject = await ReceiveRawAsync(cancelToken);
                 cancelToken.ThrowIfCancellationRequested();
-                //Console.Write($"Message received: {msgObject}");
-                if (msgObject.ContainsKey("id")) // this is the problem
+                if (msgObject.ContainsKey("id"))
                 {
                     var msgId = (int)msgObject["id"]!;
-                    var resultObject = (JObject)msgObject["result"]!;
-                    HandleRequestResponse(msgId, resultObject);
+                    HandleRequestResponse(msgId, msgObject);
                 } else if (msgObject.ContainsKey("method"))
                 {
                     var sessionId = msgObject["sessionId"]?.ToString();
@@ -175,25 +174,40 @@ namespace LibChromeDotNet.CDP
             }
 
             private object _Sync = new object();
-            private JObject? _Result;
+            private JObject? _Response;
 
-            public void Fulfill(JObject requestResult)
+            public void Fulfill(JObject requestResponse)
             {
-                _Result = requestResult;
+                _Response = requestResponse;
                 lock (_Sync)
                     Monitor.PulseAll(_Sync);
             }
 
-            public JObject WaitForResponse()
+            public JObject WaitForResult()
             {
-                if (_Result != null)
-                    return _Result;
+                var response = WaitForResponse();
+                if (response.ContainsKey("result"))
+                    return (JObject)response["result"]!;
+                if (response.ContainsKey("error"))
+                {
+                    var errorObj = (JObject)response["error"]!;
+                    var code = (int)errorObj["code"]!;
+                    var message = (string)errorObj["message"]!;
+                    throw new ChromeDevProtocolException(message, code);
+                }
+                throw new ChromeDevProtocolException("Invalid response object", 0);
+            }
+
+            private JObject WaitForResponse()
+            {
+                if (_Response != null)
+                    return _Response;
                 lock (_Sync)
                 {
-                    if (_Result != null)
-                        return _Result;
+                    if (_Response != null)
+                        return _Response;
                     Monitor.Wait(_Sync);
-                    return _Result!;
+                    return _Response!;
                 }
             }
         }
